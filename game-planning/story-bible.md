@@ -23,7 +23,7 @@ Roodle's friends' band, **Freddy Begins**, plays a gig at a festival on a flat g
 | Book House | Blossom Book House (confirmed by user: MG Road area) | |
 | Gallery | MAP (Museum of Art & Photography), Bengaluru | near Kasturba Road / Cubbon Park (confirmed by user), Book House a short drive away |
 | Flea Market | street vendors who set up in front of the gallery | no separate location |
-| Cafe | a cafe in the same area as the gallery | name still to choose |
+| Cafe | a cafe in the same area as the gallery | Kona Cafe |
 | Festival | flat ground off NICE Road | far south-west, opposite end from Yelahanka |
 
 ## Route (and where traffic scenes go)
@@ -57,6 +57,5 @@ The Gallery, Flea Market and Cafe are all in one area, so they share ONE wide pa
 
 ## Still open
 - Drummer's name
-- Name of the cafe
 - Gudle's exact furious line(s)
 - Costumes per scene
