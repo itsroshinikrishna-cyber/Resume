@@ -12,7 +12,7 @@ Roodle's friends' band, **Freddy Begins**, plays a gig at a festival on a flat g
 - Rant covers: the day she lost, Roodle never answers her phone, worry.
 
 ## Characters (supporting)
-- **Freddy Begins**: the band. Drummer's name still to decide.
+- **Freddy Begins**: the band. Drummer: **PK** (Mira's boyfriend).
 - **Mira**: artist, the drummer's girlfriend, Roodle's friend. Appears at the Gallery (as an artist) and at the festival.
 
 ## Real places
@@ -56,6 +56,5 @@ The Gallery, Flea Market and Cafe are all in one area, so they share ONE wide pa
 5. Hug, chocolate shake, the pigeons.
 
 ## Still open
-- Drummer's name
 - Gudle's exact furious line(s)
 - Costumes per scene
