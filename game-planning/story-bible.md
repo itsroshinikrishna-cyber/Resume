@@ -40,8 +40,8 @@ The Gallery, Flea Market and Cafe are all in one area, so they share ONE wide pa
 
 ## Clue chain
 1. Home: made bed, charger still plugged in, half-hidden Freddy Begins poster
-2. Police station: nothing useful, pigeon drops Blossom book
-3. Book House: put the book back in its gap, find the receipt (unlocks Gallery + Market)
+2. Police station: the puzzle is useless (officers have no information). Pigeons point to an officer heading to Blossom Book House. Coincidence, not a plan. (Replaces the pigeon-drops-book beat.)
+3. Book House: TO REWORK (no dropped book now). Idea: Roodle is a regular, find the book with her bookmark in it, receipt inside (unlocks Gallery + Market). Her bookmark handwriting is the reference for the Gallery match.
 4. Gallery: match Roodle's handwriting in the guestbook, meet Mira's work
 5. Flea Market: pick Roodle's items (sunscreen, scarf, snacks, rain layer), power bank she did not buy
 6. Cafe: find the festival flyer, match it to the items
