@@ -55,6 +55,10 @@ The Gallery, Flea Market and Cafe are all in one area, so they share ONE wide pa
 4. Gudle sees the friends, the band, Mira. "...You have people here."
 5. Hug, chocolate shake, the pigeons.
 
+## Gudle's voice (from the author)
+> "What the hell were you thinking? No call, no text, no way to find you."
+
+Anger from concern, angry-crying. Short, clipped, escalating.
+
 ## Still open
-- Gudle's exact furious line(s)
 - Costumes per scene
