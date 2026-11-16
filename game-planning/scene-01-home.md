@@ -5,6 +5,12 @@
 ## Pigeon backstory (author's note)
 Roodle feeds the pigeons every morning, so they wait on the balcony for her. Gudle has noticed. The pigeons being hungry and waiting is the first real clue that Roodle has been gone since last night.
 
+## Pigeon rule (author's decision)
+Gudle does not like that Roodle feeds the pigeons, but she is the type to feed them just because her sister does. So the choice is kept, but the outcome is the same either way:
+- Feed: Gudle grumbles ("Her stupid pigeon food.") and feeds them.
+- Throw: she throws something, a pigeon looks at her, offended. She mutters "...fine." and feeds them anyway.
+Either way the keys are freed. The player sees she can't stay angry at them, which quietly sets up the ending.
+
 ## Goal
 Gudle needs her car keys to leave. They are on the balcony rail, under a pigeon.
 

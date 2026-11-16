@@ -61,6 +61,8 @@ Roodle feeds the pigeons every morning, so they wait on the balcony for her as u
 - The seed jar is Roodle's. When Gudle feeds them, she is doing Roodle's routine.
 - The pigeons follow Gudle all day because they are looking for Roodle too, and they deliver the book clue.
 - Finale: Gudle feeds them at ease, accepting that routine.
+- Gudle does NOT like Roodle feeding the pigeons. But she is the type who feeds them just because her sister does. Sets up the ending: she can't stay angry at them.
+- Rule for every pigeon interaction: whichever way the player goes, Gudle ends up feeding them. Throwing -> a pigeon looks at her, offended, she mutters "...fine." and feeds them anyway.
 
 ## Gudle's voice (from the author)
 > "What the hell were you thinking? No call, no text, no way to find you."
