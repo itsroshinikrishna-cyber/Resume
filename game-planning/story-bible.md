@@ -21,20 +21,22 @@ Roodle's friends' band, **Freddy Begins**, plays a gig at a festival on a flat g
 | Home | Yelahanka | north Bangalore, far from everything else |
 | Police station | High Grounds Police Station, Millers Road | |
 | Book House | Blossom Book House (user said MG Road; I believe it is on Church Street just off MG Road, double-check) | |
-| Gallery, Market, Cafe | still to choose | |
+| Gallery | MAP (Museum of Art & Photography), Bengaluru | near Kasturba Road / Cubbon Park, verify |
+| Flea Market | street vendors who set up in front of the gallery | no separate location |
+| Cafe | a cafe in the same area as the gallery | name still to choose |
 | Festival | flat ground off NICE Road | far south-west, opposite end from Yelahanka |
 
 ## Route (and where traffic scenes go)
+The Gallery, Flea Market and Cafe are all in one area, so they share ONE wide panning street (the "MAP street"). The Book House is a short hop away.
+
 1. Home (Yelahanka)
-2. Traffic scene 1: long drive south
+2. Traffic scene 1: long drive south from Yelahanka
 3. Police station (High Grounds, Millers Road)
 4. Blossom Book House
-5. Gallery (Mira's work)
-6. Flea Market
-7. Traffic scene 2: Gudle stuck in a jam
-8. Cafe
-9. Traffic scene 3: final drive across the city to NICE Road
-10. Festival
+5. Short traffic scene to the MAP street
+6. MAP street, panning hub: Gallery (MAP), Flea Market (vendors out front), Cafe. Order: Gallery and Market in any order, Cafe's matching puzzle needs the market items.
+7. Traffic scene 3: final drive across the city to NICE Road
+8. Festival
 
 (Check the geography and travel order against real distances before drawing.)
 
@@ -57,6 +59,6 @@ Roodle's friends' band, **Freddy Begins**, plays a gig at a festival on a flat g
 
 ## Still open
 - Drummer's name
-- Gallery, Flea Market, Cafe: real places
+- Name of the cafe
 - Gudle's exact furious line(s)
 - Costumes per scene
