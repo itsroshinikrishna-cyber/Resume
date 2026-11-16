@@ -55,6 +55,13 @@ The Gallery, Flea Market and Cafe are all in one area, so they share ONE wide pa
 4. Gudle sees the friends, the band, Mira. "...You have people here."
 5. Hug, chocolate shake, the pigeons.
 
+## The pigeons (from the author)
+Roodle feeds the pigeons every morning, so they wait on the balcony for her as usual. Gudle has noticed this. Consequences:
+- Hungry pigeons on the rail at the start are the first real evidence Roodle did not come home or feed them.
+- The seed jar is Roodle's. When Gudle feeds them, she is doing Roodle's routine.
+- The pigeons follow Gudle all day because they are looking for Roodle too, and they deliver the book clue.
+- Finale: Gudle feeds them at ease, accepting that routine.
+
 ## Gudle's voice (from the author)
 > "What the hell were you thinking? No call, no text, no way to find you."
 
