@@ -220,5 +220,34 @@ window.PS = (function () {
     const v = {}; for (const f of TREATMENTS[treatment].fields) v[f.k] = f.type === "select" ? f.opts[0] : f.def || ""; return v;
   }
 
-  return { api, config, readFile, uploadFile, listAssets, pickAsset, nav, toast, esc, TREATMENTS, buildPrompt, defaults, nameColor };
+  /* ---------- Copy hierarchy ----------
+     One full line  ->  small line above / headline / small line below.
+       "Find matcha mask for your skin"  ->  Find | Matcha mask | For your skin
+       "Gift ideas that don't get regifted" ->  - | Gift ideas | That don't get regifted
+       "Build my fragrance"              ->  Build my | Fragrance | -
+     Lead-ins (kicker) and qualifier starters (subline) come from the visual-system examples. */
+  const LEADS = ["build my", "find", "shop", "discover", "get", "the", "your", "my"];
+  const SUB_STARTS = ["for", "that", "to", "with", "without", "under", "in", "on", "so", "like", "when", "from", "by", "if"];
+  function splitCopy(text) {
+    const w = String(text || "").replace(/\s+/g, " ").trim().split(" ").filter(Boolean);
+    if (!w.length) return { kicker: "", headline: "", sub: "" };
+    const low = w.map(x => x.toLowerCase().replace(/[.,!?:;]+$/, ""));
+    let start = 0;
+    for (const lead of LEADS) {                       // longest lead-ins listed first
+      const n = lead.split(" ").length;
+      if (low.slice(0, n).join(" ") === lead && w.length > n) { start = n; break; }
+    }
+    let end = w.length;
+    for (let j = start + 1; j < w.length; j++) if (SUB_STARTS.includes(low[j])) { end = j; break; }
+    return { kicker: w.slice(0, start).join(" "), headline: w.slice(start, end).join(" "), sub: w.slice(end).join(" ") };
+  }
+  const wc = s => String(s || "").trim().split(/\s+/).filter(Boolean).length;
+  function copyIssues(c, max) {
+    const out = [], total = wc(c.kicker) + wc(c.headline) + wc(c.sub);
+    if (total > (max || 7)) out.push(`${total} words (max ${max || 7})`);
+    if (wc(c.headline) > 4) out.push("Headline is long; the big text may wrap to 3+ lines");
+    return out;
+  }
+
+  return { api, config, readFile, uploadFile, listAssets, pickAsset, nav, toast, esc, TREATMENTS, buildPrompt, defaults, nameColor, splitCopy, copyIssues };
 })();

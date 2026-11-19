@@ -178,6 +178,7 @@
       <label>Alignment</label>
       <div class="seg" data-k="align"><button data-v="left">Bottom left</button><button data-v="right">Bottom right</button></div>
       <div class="count" id="wc" style="margin-top:8px"></div>
+      <button class="btn small" id="btnSplit" style="margin-top:8px;width:100%" title="Type or paste one full line into the headline, then click">Auto-split one line into the 3 levels</button>
     </fieldset>
 
     <fieldset data-for="prompt">
@@ -296,7 +297,8 @@ function drawPreview(){
   preview.style.width=W*PREVIEW_SCALE+"px"; preview.style.height=H*PREVIEW_SCALE+"px";
   preview.style.cursor = c.type!=="prompt"&&c.img ? "grab":"default";
   const n=wordCount(c), wc=$("#wc");
-  wc.textContent=`${n} / ${MAX_WORDS} words`+(n>MAX_WORDS?" – too long":""); wc.className="count "+(n>MAX_WORDS?"bad":"good");
+  const issues=PS.copyIssues(c,MAX_WORDS);
+  wc.textContent=`${n} / ${MAX_WORDS} words`+(issues.length?" · "+issues.filter(m=>!/words \(max/.test(m)).join(" · "):""); wc.className="count "+(issues.length?"bad":"good");
   const q=(c.question||"").trim().split(/\s+/).filter(Boolean).length;
   $("#wcp").textContent=`${q} words`; $("#wcp").className="count";
   $("#genLink").href="generate?"+new URLSearchParams({treatment:c.treatment,segment:c.segment,category:c.category});
@@ -399,6 +401,11 @@ document.addEventListener("click",e=>{
     state.cards.unshift(c); sel=c.id; buildList(); syncUI(); refresh(); save();
   }
 });
+$("#btnSplit").onclick=()=>{
+  const c=cur(); if(!c||c.type==="prompt") return;
+  const s=PS.splitCopy([c.kicker,c.headline.replace(/\n/g," "),c.sub].filter(Boolean).join(" "));
+  c.kicker=s.kicker; c.headline=s.headline; c.sub=s.sub; syncUI(); refresh(); save(c);
+};
 $("#btnPrev").onclick=()=>go(-1); $("#btnNext").onclick=()=>go(1);
 $("#btnDup").onclick=()=>{ const c=cur(); if(!c) return; const d=JSON.parse(JSON.stringify(c)); d.id=uid(); d.createdAt=Date.now(); state.cards.unshift(d); sel=d.id; buildList(); syncUI(); refresh(); save(d); };
 $("#btnDel").onclick=()=>{ const c=cur(); if(!c||!confirm("Delete this card for everyone?")) return; const i=state.cards.indexOf(c); state.cards.splice(i,1); sel=state.cards[Math.min(i,state.cards.length-1)]?.id; buildList(); if(cur()){syncUI();refresh();} else {const x=preview.getContext("2d");x.clearRect(0,0,preview.width,preview.height);} Store.deleteCard(c.id); if(!Store.remote) save(c); };
