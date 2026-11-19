@@ -17,7 +17,7 @@
   html,body{margin:0;height:100%}
   body{font-family:"DM Sans",system-ui,sans-serif;background:var(--bg);color:var(--ink);font-size:14px}
   header{display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--panel);border-bottom:1px solid var(--line)}
-  header h1{font-size:16px;font-weight:900;letter-spacing:.04em;text-transform:uppercase;margin:0;flex:1}
+  header h1{font-size:16px;font-weight:900;letter-spacing:.04em;text-transform:uppercase;margin:0}
   header small{color:var(--muted)}
   button,select,input,textarea{font:inherit;color:inherit}
   button{cursor:pointer}
@@ -80,6 +80,8 @@
 <body>
 <header>
   <h1>Pills Studio</h1>
+  <nav id="nav"></nav>
+  <span style="flex:1"></span>
   <small id="saveState">Saved in this browser</small>
   <button class="btn" id="btnPNG">Download PNG</button>
   <button class="btn primary" id="btnZip">Download all (ZIP)</button>
@@ -132,6 +134,7 @@
       <legend>Image</legend>
       <div class="drop" id="drop">Click, drop or paste an image</div>
       <input type="file" id="file" accept="image/*" hidden>
+      <button class="btn small" id="btnLibImg" style="margin-top:6px;width:100%">Choose from the shared library…</button>
       <label>Zoom</label><input type="range" data-k="zoom" min="1" max="3" step="0.01">
       <label>Position X</label><input type="range" data-k="ox" min="-1" max="1" step="0.01">
       <label>Position Y</label><input type="range" data-k="oy" min="-1" max="1" step="0.01">
@@ -170,18 +173,14 @@
     </fieldset>
 
     <fieldset data-for="image9 image45">
-      <legend>Image prompt (for your image model)</legend>
-      <label>Subject</label>
-      <input type="text" data-k="subject" placeholder="Matcha face mask, man pulling a funny face">
-      <label>Generated prompt</label>
-      <textarea id="promptOut" rows="9" readonly></textarea>
-      <button class="btn small" id="btnCopyPrompt" style="margin-top:6px">Copy prompt</button>
+      <legend>Need an image?</legend>
+      <a class="btn" id="genLink" href="generate" style="display:block;text-align:center;text-decoration:none">Generate one for this card →</a>
     </fieldset>
   </aside>
 </main>
 <div id="toast"></div>
-<input type="file" id="mascotFile" accept="image/*" hidden>
 
+<script src="shared.js"></script>
 <script>
 "use strict";
 /* ---------- Strategy data ---------- */
@@ -191,23 +190,7 @@ const MAX_WORDS = 7;
 const EXPORT_SCALE = 4;
 const PREVIEW_SCALE = 2;
 
-const TREATMENTS = {
-  contrejour: {
-    name:"Contre-jour beauty close-ups",
-    style:"Tight, backlit macro crop of the moment the product is used, with the model partly cropped and one element catching the light.",
-    rules:["One macro crop and one action per image","One gradient colour per category, falling to dark at the edges","A thin rim light with a soft fill so skin and texture stay readable","Consistent 9:16 or 4:5 ratio"]
-  },
-  playful: {
-    name:"Playful conceptual portraits",
-    style:"Full-face model caught mid-action with the product as a prop and one unexpected twist, shot with direct flash on a flat, saturated backdrop.",
-    rules:["One full-face model, one twist per image","One bold backdrop colour per category","Direct flash with a realistic, unretouched feel","Consistent 9:16 or 4:5 ratio"]
-  },
-  hero: {
-    name:"Hero product still life",
-    style:"The product is the hero, shot on location in natural light with no model competing for attention.",
-    rules:["One hero product or small group per image, in a real-world scene","Essentials carry the mock \"bloom\" brand so they read as a product line","Accessories and other products stay completely unbranded","Consistent 9:16 or 4:5 ratio"]
-  }
-};
+const TREATMENTS = PS.TREATMENTS;
 const PALETTES = {
   purple:{ label:"Purple", brand:"#CCABFF", from:"#F3ECFF", to:"#AE8AFF" },
   pink:  { label:"Pink",   brand:"#FF9B99", from:"#FFEDEA", to:"#FFAEA9" },
@@ -216,57 +199,99 @@ const PALETTES = {
 };
 
 /* ---------- State ---------- */
-const STORE_KEY = "pillsStudio.v1";
+const STORE_KEY = "pillsStudio.v2";
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const uid = () => Math.random().toString(36).slice(2,9);
-let state, sel;
+let state = { cards:[] }, sel = null;
+const cur = () => state.cards.find(c=>c.id===sel);
 
 function blank(type){
-  return { id:uid(), type, segment:"neutral", category:"", treatment:"contrejour", subject:"",
+  return { id:uid(), type, segment:"neutral", category:"", treatment:"contrejour",
     kicker:"", headline:"", sub:"", align:"left", img:null, zoom:1, ox:0, oy:0,
     scrimAuto:true, scrimColor:"#20483a", scrimH:55,
-    question:"", subtext:"", palette:"purple", mascot:-1 };
+    question:"", subtext:"", palette:"purple", mascot:"", createdAt:Date.now() };
 }
 function seed(){
-  const a = Object.assign(blank("image9"),{segment:"male",category:"Skincare",treatment:"playful",kicker:"Find",headline:"Matcha\nmask",sub:"For your skin",align:"right",subject:"Matcha face mask, man pulling a funny face"});
-  const b = Object.assign(blank("image45"),{segment:"male",category:"Fitness",treatment:"hero",headline:"5 gym\ngo-tos",sub:"For a beginner"});
-  const c = Object.assign(blank("prompt"),{segment:"female",category:"Skincare",question:"Two under-\nrated hacks to find your undertone"});
-  return { cards:[a,b,c], mascots:[] };
+  const now=Date.now();
+  const a = Object.assign(blank("image9"),{segment:"male",category:"Skincare",treatment:"playful",kicker:"Find",headline:"Matcha\nmask",sub:"For your skin",align:"right",createdAt:now});
+  const b = Object.assign(blank("image45"),{segment:"male",category:"Fitness",treatment:"hero",headline:"5 gym\ngo-tos",sub:"For a beginner",createdAt:now-1000});
+  const c = Object.assign(blank("prompt"),{segment:"female",category:"Skincare",question:"Two under-\nrated hacks to find your undertone",createdAt:now-2000});
+  return [a,b,c];
 }
-function load(){ try{ const s=JSON.parse(localStorage.getItem(STORE_KEY)); if(s&&s.cards&&s.cards.length) return s; }catch(e){} return null; }
-let saveTimer;
-function save(){
-  clearTimeout(saveTimer);
-  saveTimer=setTimeout(()=>{
-    try{ localStorage.setItem(STORE_KEY,JSON.stringify(state)); $("#saveState").textContent="Saved in this browser"; }
-    catch(e){ $("#saveState").textContent="Browser storage full – download your cards"; }
-  },300);
-}
-const cur = () => state.cards.find(c=>c.id===sel);
-state = load() || seed();
-sel = state.cards[0]?.id;
+function normalize(c){ const o=Object.assign(blank(c.type||"image9"),c); if(typeof o.mascot!=="string") o.mascot=""; if(typeof o.img!=="string") o.img=null; return o; }
+
+/* Cards are shared through the API when it is available, otherwise kept in this browser. */
+const Store = {
+  remote:false, timers:new Map(), dirty:new Set(), lt:0,
+  setStatus(t){ $("#saveState").textContent=t; },
+  async init(){
+    const cfg=await PS.config();
+    this.remote=!cfg.offline;
+    if(this.remote){
+      try{
+        let cards=(await PS.api("/api/cards")).cards;
+        if(!cards.length){ cards=seed(); await Promise.all(cards.map(c=>PS.api("/api/cards",{method:"PUT",body:{card:c}}))); }
+        state.cards=cards.map(normalize); this.setStatus("Shared with everyone"); return;
+      }catch(e){ this.remote=false; toast("Shared storage unavailable. Working in this browser only."); }
+    }
+    let s=null; try{ s=JSON.parse(localStorage.getItem(STORE_KEY)); }catch(e){}
+    state.cards=(s&&s.cards&&s.cards.length?s.cards:seed()).map(normalize);
+    this.setStatus("Saved in this browser only");
+  },
+  saveCard(c){
+    if(!c) return;
+    if(!this.remote){
+      clearTimeout(this.lt);
+      this.lt=setTimeout(()=>{ try{ localStorage.setItem(STORE_KEY,JSON.stringify(state)); this.setStatus("Saved in this browser only"); }catch(e){ this.setStatus("Browser storage full. Download your cards."); } },300);
+      return;
+    }
+    this.dirty.add(c.id); this.setStatus("Saving…");
+    clearTimeout(this.timers.get(c.id));
+    this.timers.set(c.id,setTimeout(async()=>{
+      try{ await PS.api("/api/cards",{method:"PUT",body:{card:c}}); this.dirty.delete(c.id); if(!this.dirty.size) this.setStatus("Saved · shared with everyone"); }
+      catch(e){ this.setStatus("Couldn't save: "+e.message); }
+    },500));
+  },
+  async deleteCard(id){
+    if(!this.remote) return this.saveCard({id});
+    clearTimeout(this.timers.get(id)); this.dirty.delete(id);
+    try{ await PS.api("/api/cards?id="+id,{method:"DELETE"}); this.setStatus("Deleted"); }catch(e){ toast("Couldn't delete: "+e.message); }
+  },
+  async reload(){
+    if(!this.remote||this.dirty.size) return;
+    try{
+      const keep=sel; state.cards=(await PS.api("/api/cards")).cards.map(normalize);
+      sel=state.cards.some(c=>c.id===keep)?keep:state.cards[0]?.id;
+      buildList(); if(cur()){ syncUI(); refresh(); }
+    }catch(e){}
+  }
+};
+function save(c){ Store.saveCard(c||cur()); }
 
 /* ---------- Image cache ---------- */
 const imgCache = new Map();
-function getImg(src){
-  if(!src) return null;
-  let e = imgCache.get(src);
-  if(!e){ e={img:new Image(),ok:false}; e.img.onload=()=>{e.ok=true;refresh();}; e.img.src=src; imgCache.set(src,e); }
-  return e.ok ? e.img : null;
+function imgEntry(src){
+  let e=imgCache.get(src);
+  if(!e){
+    e={img:new Image(),ok:false,failed:false};
+    if(!src.startsWith("data:")) e.img.crossOrigin="anonymous";
+    e.img.onload=()=>{ e.ok=true; scheduleRedraw(); };
+    e.img.onerror=()=>{ e.failed=true; };
+    e.img.src=src; imgCache.set(src,e);
+  }
+  return e;
 }
-function readFile(file,max,type){
-  return new Promise((res,rej)=>{
-    const fr=new FileReader();
-    fr.onload=()=>{ const im=new Image(); im.onload=()=>{
-      const k=Math.min(1,max/Math.max(im.width,im.height));
-      const c=document.createElement("canvas"); c.width=Math.round(im.width*k); c.height=Math.round(im.height*k);
-      c.getContext("2d").drawImage(im,0,0,c.width,c.height);
-      res(type==="png"?c.toDataURL("image/png"):c.toDataURL("image/jpeg",.9));
-    }; im.onerror=rej; im.src=fr.result; };
-    fr.onerror=rej; fr.readAsDataURL(file);
+function getImg(src){ if(!src) return null; const e=imgEntry(src); return e.ok?e.img:null; }
+function loadImg(src){
+  return new Promise(res=>{
+    if(!src) return res(null);
+    const e=imgEntry(src); if(e.ok) return res(e.img); if(e.failed) return res(null);
+    e.img.addEventListener("load",()=>res(e.img)); e.img.addEventListener("error",()=>res(null));
   });
 }
+let redrawQ=false;
+function scheduleRedraw(){ if(redrawQ) return; redrawQ=true; requestAnimationFrame(()=>{ redrawQ=false; drawPreview(); state.cards.forEach(drawThumb); }); }
 
 /* ---------- Rendering ---------- */
 function coverRect(img,c,W,H){
@@ -336,8 +361,8 @@ function drawPrompt(ctx,c,W,H){
   const p=PALETTES[c.palette]||PALETTES.purple;
   const g=ctx.createLinearGradient(0,0,W,H); g.addColorStop(0,p.from); g.addColorStop(1,p.to);
   ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
-  const mh=30, m=c.mascot>=0?getImg(state.mascots[c.mascot]):null;
-  if(m) ctx.drawImage(m,14,14,mh*m.width/m.height,mh); else if(c.mascot<0) drawMascotDefault(ctx,14,14,mh);
+  const mh=30, m=c.mascot?getImg(c.mascot):null;
+  if(m) ctx.drawImage(m,14,14,mh*m.width/m.height,mh); else drawMascotDefault(ctx,14,14,mh);
   ctx.fillStyle="#14121a"; ctx.textAlign="left"; ctx.textBaseline="alphabetic";
   setFont(ctx,400,15,-.1);
   const lines=wrap(ctx,c.question||"",W-28); let y=70;
@@ -366,7 +391,7 @@ function drawPreview(){
   wc.textContent=`${n} / ${MAX_WORDS} words`+(n>MAX_WORDS?" – too long":""); wc.className="count "+(n>MAX_WORDS?"bad":"good");
   const q=(c.question||"").trim().split(/\s+/).filter(Boolean).length;
   $("#wcp").textContent=`${q} words`; $("#wcp").className="count";
-  $("#promptOut").value=buildPrompt(c);
+  $("#genLink").href="generate?"+new URLSearchParams({treatment:c.treatment,segment:c.segment,category:c.category});
   $("#stageHint").textContent = c.type==="prompt" ? "Text-led card with the Glance mascot. Tapping it sends the question straight into the chat."
     : "Drag the image to reposition. Text sits bottom left or bottom right only.";
 }
@@ -401,25 +426,13 @@ function syncUI(){
 }
 function renderMascots(){
   const c=cur(); const box=$("#mascots"); box.innerHTML="";
-  const mk=(idx,inner)=>{ const b=document.createElement("button"); b.className=idx===c.mascot?"on":""; b.append(inner); b.onclick=()=>{ c.mascot=idx; renderMascots(); refresh(); save(); }; box.append(b); };
-  const dc=document.createElement("canvas"); dc.width=dc.height=88; drawMascotDefault(dc.getContext("2d"),4,4,80); mk(-1,dc);
-  state.mascots.forEach((src,i)=>{ const im=new Image(); im.src=src; mk(i,im); });
-  const add=document.createElement("button"); add.textContent="+"; add.title="Upload mascot (PNG with transparent background)";
-  add.onclick=()=>$("#mascotFile").click(); box.append(add);
-}
-
-/* ---------- Image prompt builder ---------- */
-function buildPrompt(c){
-  const t=TREATMENTS[c.treatment]||TREATMENTS.contrejour;
-  const seg={female:"female model",male:"male model",neutral:"no gender-specific casting"}[c.segment];
-  return [
-    `${t.name}. ${c.type==="image9"?"9:16":"4:5"} portrait image for a shopping-app starter card.`,
-    `Subject: ${c.subject||"[describe the product and moment]"}${c.category?` (category: ${c.category})`:""}.`,
-    `Casting: ${seg}.`,
-    `Style: ${t.style}`,
-    `Rules: ${t.rules.join("; ")}.`,
-    `Composition: keep the bottom 35% calm and uncluttered so overlay text stays readable. No text, logos, watermarks or UI in the image.`
-  ].join("\n");
+  const mk=(url,inner)=>{ const b=document.createElement("button"); b.className=(url===c.mascot)?"on":""; b.append(inner); b.onclick=()=>{ c.mascot=url; renderMascots(); refresh(); save(c); }; box.append(b); };
+  const dc=document.createElement("canvas"); dc.width=dc.height=88; drawMascotDefault(dc.getContext("2d"),4,4,80); mk("",dc);
+  if(c.mascot){ const im=new Image(); im.src=c.mascot; mk(c.mascot,im); }
+  const lib=document.createElement("button"); lib.textContent="Library…"; lib.title="Choose a mascot from the shared library";
+  lib.style.cssText="width:auto;padding:0 12px;font-size:12px;font-weight:600";
+  lib.onclick=async()=>{ const it=await PS.pickAsset(["mascot"],"Choose a mascot"); if(it){ c.mascot=it.url; renderMascots(); refresh(); save(c); } };
+  box.append(lib);
 }
 
 /* ---------- Events ---------- */
@@ -443,26 +456,25 @@ document.addEventListener("click",e=>{
     state.cards.unshift(c); sel=c.id; buildList(); syncUI(); refresh(); save();
   }
 });
-$("#btnDup").onclick=()=>{ const c=cur(); if(!c) return; const d=JSON.parse(JSON.stringify(c)); d.id=uid(); state.cards.splice(state.cards.indexOf(c)+1,0,d); sel=d.id; buildList(); syncUI(); refresh(); save(); };
-$("#btnDel").onclick=()=>{ const c=cur(); if(!c||!confirm("Delete this card?")) return; const i=state.cards.indexOf(c); state.cards.splice(i,1); sel=state.cards[Math.min(i,state.cards.length-1)]?.id; buildList(); if(cur()){syncUI();refresh();} else {const x=preview.getContext("2d");x.clearRect(0,0,preview.width,preview.height);} save(); };
+$("#btnDup").onclick=()=>{ const c=cur(); if(!c) return; const d=JSON.parse(JSON.stringify(c)); d.id=uid(); d.createdAt=Date.now(); state.cards.unshift(d); sel=d.id; buildList(); syncUI(); refresh(); save(d); };
+$("#btnDel").onclick=()=>{ const c=cur(); if(!c||!confirm("Delete this card for everyone?")) return; const i=state.cards.indexOf(c); state.cards.splice(i,1); sel=state.cards[Math.min(i,state.cards.length-1)]?.id; buildList(); if(cur()){syncUI();refresh();} else {const x=preview.getContext("2d");x.clearRect(0,0,preview.width,preview.height);} Store.deleteCard(c.id); if(!Store.remote) save(c); };
 
 // palette swatches
 $("#palette").innerHTML=Object.entries(PALETTES).map(([k,p])=>`<button data-v="${k}" title="${p.label} ${p.brand}" style="background:linear-gradient(135deg,${p.from},${p.to})"></button>`).join("");
 $("#treatment").innerHTML=Object.entries(TREATMENTS).map(([k,t])=>`<option value="${k}">${t.name}</option>`).join("");
 
-// image upload / drop / paste
-async function setImage(file){
-  const c=cur(); if(!c||c.type==="prompt"||!file||!file.type.startsWith("image/")) return;
-  c.img=await readFile(file,1600,"jpg"); c.zoom=1; c.ox=0; c.oy=0; syncUI(); refresh(); save();
+// image upload / drop / paste / library
+function applyImage(c,url){ c.img=url; c.zoom=1; c.ox=0; c.oy=0; syncUI(); refresh(); save(c); }
+async function setImageFile(file){
+  const c=cur(); if(!c||c.type==="prompt"||!file) return;
+  try{ toast("Uploading…"); const it=await PS.uploadFile("image",file); applyImage(c,it.url); toast(it.offline?"Image added":"Added to the shared library"); }
+  catch(e){ toast(e.message); }
 }
 $("#drop").onclick=()=>$("#file").click();
-$("#file").onchange=e=>{ setImage(e.target.files[0]); e.target.value=""; };
-["dragover","drop"].forEach(t=>document.addEventListener(t,e=>{ e.preventDefault(); if(t==="drop") setImage(e.dataTransfer.files[0]); }));
-document.addEventListener("paste",e=>{ const f=[...(e.clipboardData?.files||[])][0]; if(f) setImage(f); });
-$("#mascotFile").onchange=async e=>{
-  const f=e.target.files[0]; e.target.value=""; if(!f) return;
-  state.mascots.push(await readFile(f,256,"png")); cur().mascot=state.mascots.length-1; renderMascots(); refresh(); save();
-};
+$("#file").onchange=e=>{ setImageFile(e.target.files[0]); e.target.value=""; };
+$("#btnLibImg").onclick=async()=>{ const c=cur(); if(!c||c.type==="prompt") return; const it=await PS.pickAsset(["image","generated"],"Choose an image"); if(it) applyImage(c,it.url); };
+["dragover","drop"].forEach(t=>document.addEventListener(t,e=>{ e.preventDefault(); if(t==="drop") setImageFile(e.dataTransfer.files[0]); }));
+document.addEventListener("paste",e=>{ const f=[...(e.clipboardData?.files||[])][0]; if(f) setImageFile(f); });
 
 // drag to reposition
 let drag=null;
@@ -479,7 +491,7 @@ preview.addEventListener("pointerup",()=>{ if(drag){drag=null;preview.style.curs
 /* ---------- Export ---------- */
 const slug=s=>String(s||"").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,40);
 function fileName(c,i){ return [i!=null?String(i+1).padStart(2,"0"):"",c.segment,TYPE_LABEL[c.type].replace(":","x"),slug(c.category),slug(cardLabel(c))].filter(Boolean).join("_")+".png"; }
-function toBlob(c){ const cv=document.createElement("canvas"); render(c,cv,EXPORT_SCALE); return new Promise(r=>cv.toBlob(r,"image/png")); }
+async function toBlob(c){ await Promise.all([loadImg(c.img),loadImg(c.mascot)]); const cv=document.createElement("canvas"); render(c,cv,EXPORT_SCALE); return new Promise(r=>cv.toBlob(r,"image/png")); }
 function download(blob,name){ const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=name; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),2000); }
 function toast(m){ const t=$("#toast"); t.textContent=m; t.classList.add("show"); setTimeout(()=>t.classList.remove("show"),2200); }
 function warnLong(list){ const n=list.filter(c=>c.type!=="prompt"&&wordCount(c)>MAX_WORDS).length; if(n) toast(`${n} card${n>1?"s":""} over ${MAX_WORDS} words`); }
@@ -489,11 +501,24 @@ $("#btnZip").onclick=async()=>{
   const z=new JSZip(); for(let i=0;i<state.cards.length;i++) z.file(fileName(state.cards[i],i),await toBlob(state.cards[i]));
   download(await z.generateAsync({type:"blob"}),"starter-pills.zip"); warnLong(state.cards);
 };
-$("#btnCopyPrompt").onclick=async()=>{ try{ await navigator.clipboard.writeText($("#promptOut").value); toast("Prompt copied"); }catch(e){ $("#promptOut").select(); document.execCommand("copy"); toast("Prompt copied"); } };
 
 /* ---------- Boot ---------- */
-buildList(); syncUI(); refresh();
-Promise.all([400,600,900].map(w=>document.fonts.load(`${w} 16px "DM Sans"`))).then(()=>{ buildList(); refresh(); }).catch(()=>{});
+(async()=>{
+  PS.nav("studio");
+  await Store.init();
+  const p=new URLSearchParams(location.search);
+  if(p.get("new")){
+    const t=["image9","image45","prompt"].includes(p.get("new"))?p.get("new"):"image9", c=blank(t);
+    if(["female","male","neutral"].includes(p.get("segment"))) c.segment=p.get("segment");
+    if(PS.TREATMENTS[p.get("treatment")]) c.treatment=p.get("treatment");
+    c.category=(p.get("category")||"").slice(0,60);
+    const img=p.get("img"); if(img&&(img.startsWith("https://")||img.startsWith("/files/"))) c.img=img;
+    state.cards.unshift(c); sel=c.id; save(c); history.replaceState(null,"","./");
+  } else sel=state.cards[0]?.id;
+  buildList(); syncUI(); refresh();
+  Promise.all([400,600,900].map(w=>document.fonts.load(`${w} 16px "DM Sans"`))).then(()=>{ buildList(); refresh(); }).catch(()=>{});
+  document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible") Store.reload(); });
+})();
 </script>
 </body>
 </html>

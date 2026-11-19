@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Generate · Pills Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700;9..40,900&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#f4f3f6;--panel:#fff;--ink:#15131a;--muted:#6c6877;--line:#dcd8e4;--accent:#6b3df0}
+  *{box-sizing:border-box;border-radius:0!important}
+  body{margin:0;font-family:"DM Sans",system-ui,sans-serif;background:var(--bg);color:var(--ink);font-size:14px}
+  button,select,input,textarea{font:inherit;color:inherit}
+  header{display:flex;align-items:center;gap:16px;padding:0 16px;background:var(--panel);border-bottom:1px solid var(--line);min-height:54px}
+  header h1{font-size:16px;font-weight:900;letter-spacing:.04em;text-transform:uppercase;margin:0;padding:14px 0}
+  main{max-width:1200px;margin:0 auto;padding:20px 16px}
+  h2{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 10px}
+  .how{display:flex;gap:18px;flex-wrap:wrap;color:var(--muted);margin:0 0 18px;font-size:13px}
+  .how b{color:var(--ink)}
+  .tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:22px}
+  .tile{background:#fff;border:1px solid var(--line);padding:14px;text-align:left;cursor:pointer}
+  .tile:hover{border-color:var(--ink)}
+  .tile.on{border:2px solid var(--ink);padding:13px;background:#f7f5fb}
+  .tile .f{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+  .tile b{display:block;font-size:16px;margin:4px 0 6px;font-weight:900}
+  .tile span{color:var(--muted);font-size:13px;line-height:1.4}
+  .cols{display:grid;grid-template-columns:minmax(320px,440px) 1fr;gap:22px;align-items:start}
+  .card{background:#fff;border:1px solid var(--line);padding:16px}
+  label{display:block;font-size:12px;font-weight:600;margin:12px 0 4px}
+  label:first-child{margin-top:0}
+  input[type=text],select,textarea{width:100%;border:1px solid var(--line);background:#fff;padding:8px}
+  textarea{resize:vertical;line-height:1.45}
+  input[type=color]{width:46px;height:32px;padding:0;border:1px solid var(--line);background:#fff}
+  .row{display:flex;gap:10px}.row>div{flex:1}
+  .seg{display:flex}.seg button{flex:1;border:1px solid var(--line);background:#fff;padding:7px 4px;font-weight:600;font-size:12px;margin-left:-1px;cursor:pointer}
+  .seg button:first-child{margin-left:0}.seg button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .btn{border:1px solid var(--ink);background:#fff;padding:8px 12px;font-weight:600;cursor:pointer}
+  .btn:hover{background:#eee}.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}.btn.primary:hover{background:#5a2fd6}
+  .btn.primary:disabled{opacity:.5;cursor:default}.btn.small{padding:4px 8px;font-size:12px}
+  .refs{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .refs .r{position:relative;width:54px;height:72px;border:1px solid var(--line)}
+  .refs img{width:100%;height:100%;object-fit:cover;display:block}
+  .refs .r button{position:absolute;top:0;right:0;border:0;background:#15131a;color:#fff;width:18px;height:18px;line-height:16px;padding:0;cursor:pointer}
+  .rules{background:#f7f5fb;border:1px solid var(--line);padding:8px 10px;font-size:12px;line-height:1.5;color:#3c3846;margin-bottom:12px}
+  .rules ul{margin:4px 0 0;padding-left:16px}
+  .hint{font-size:12px;color:var(--muted);margin-top:4px}
+  .note{background:#fff7e0;border:1px solid #ecd58a;padding:10px 12px;margin-bottom:14px;font-size:13px}
+  .results{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px}
+  .res{background:#fff;border:1px solid var(--line)}
+  .res .t{aspect-ratio:2/3;background:#e9e6f0;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:13px;text-align:center;padding:10px;overflow:hidden}
+  .res .t img{width:100%;height:100%;object-fit:cover;display:block}
+  .res .a{display:flex;gap:6px;padding:8px;flex-wrap:wrap}
+  .empty{color:var(--muted);background:#fff;border:1px dashed var(--line);padding:50px 20px;text-align:center}
+  @media (max-width:900px){.tiles{grid-template-columns:1fr}.cols{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header><h1>Pills Studio</h1><nav id="nav"></nav></header>
+<main>
+  <div class="how"><span><b>1.</b> Pick a pill</span><span><b>2.</b> Fill in its focus</span><span><b>3.</b> Review the prompt</span><span><b>4.</b> Generate, then send the image to the Studio</span></div>
+  <div id="note"></div>
+  <h2>Pick a pill</h2>
+  <div class="tiles" id="tiles"></div>
+
+  <div class="cols">
+    <div class="card">
+      <div class="rules" id="rules"></div>
+      <div id="fields"></div>
+      <div class="row" style="margin-top:12px">
+        <div><label>Segment</label>
+          <select id="segment"><option value="female">Female</option><option value="male">Male</option><option value="neutral">Neutral</option></select></div>
+        <div><label>Category</label><input type="text" id="category" list="cats" placeholder="Skincare"></div>
+      </div>
+      <datalist id="cats"><option>Grooming</option><option>Skincare</option><option>Haircare</option><option>Makeup</option><option>Fashion</option><option>Accessories</option><option>Fitness</option><option>Travel</option><option>Gifts</option><option>Tech</option><option>Pets</option><option>Home decor</option></datalist>
+      <label>Format</label>
+      <div class="seg" id="ratio"><button data-v="image9" class="on">9:16</button><button data-v="image45">4:5</button></div>
+      <label>Style reference <span style="font-weight:400;color:var(--muted)">(optional, up to 3)</span></label>
+      <div class="refs" id="refs"></div>
+      <div class="hint">References steer the look. Only use images you own or are licensed to use.</div>
+    </div>
+
+    <div>
+      <div class="card" style="margin-bottom:18px">
+        <label>Prompt <span style="font-weight:400;color:var(--muted)">(built from the strategy; edit it if you need to)</span></label>
+        <textarea id="prompt" rows="9"></textarea>
+        <div class="row" style="margin-top:10px;align-items:center">
+          <div style="flex:none;width:130px"><select id="n"><option value="1">1 image</option><option value="2">2 images</option><option value="3">3 images</option><option value="4">4 images</option></select></div>
+          <div style="flex:1;display:flex;gap:8px;justify-content:flex-end">
+            <button class="btn small" id="reset" hidden>Reset prompt</button>
+            <button class="btn small" id="copy">Copy prompt</button>
+            <button class="btn primary" id="go">Generate</button>
+          </div>
+        </div>
+        <div class="hint" id="status"></div>
+      </div>
+      <h2>Results</h2>
+      <div class="results" id="results"><div class="empty" style="grid-column:1/-1">Generated images appear here and are saved to the Library.</div></div>
+    </div>
+  </div>
+</main>
+<script src="shared.js"></script>
+<script>
+PS.nav("generate");
+const $=s=>document.querySelector(s), esc=PS.esc;
+const params=new URLSearchParams(location.search);
+let treatment=PS.TREATMENTS[params.get("treatment")]?params.get("treatment"):"contrejour";
+const vals={}; for(const k in PS.TREATMENTS) vals[k]=PS.defaults(k);
+const common={segment:["female","male","neutral"].includes(params.get("segment"))?params.get("segment"):"neutral",category:params.get("category")||"",ratio:"image9"};
+let refs=[], dirty=false, cfg={};
+
+function renderTiles(){
+  $("#tiles").innerHTML=Object.entries(PS.TREATMENTS).map(([k,t])=>`<button class="tile ${k===treatment?"on":""}" data-k="${k}"><div class="f">${esc(t.focus)}</div><b>${esc(t.name)}</b><span>${esc(t.blurb)}</span></button>`).join("");
+}
+function renderForm(){
+  const t=PS.TREATMENTS[treatment];
+  $("#rules").innerHTML=`<b>How we use it</b><ul>${t.rules.map(r=>`<li>${esc(r)}</li>`).join("")}</ul>`;
+  $("#fields").innerHTML=t.fields.map(f=>{
+    const v=esc(vals[treatment][f.k]??"");
+    if(f.type==="select") return `<label>${esc(f.label)}</label><select data-f="${f.k}">${f.opts.map(o=>`<option ${o===vals[treatment][f.k]?"selected":""}>${esc(o)}</option>`).join("")}</select>`;
+    if(f.type==="color") return `<label>${esc(f.label)}</label><input type="color" data-f="${f.k}" value="${v}">`;
+    return `<label>${esc(f.label)}</label><input type="text" data-f="${f.k}" value="${v}" placeholder="${esc(f.ph||"")}">`;
+  }).join("");
+  $("#segment").value=common.segment; $("#category").value=common.category;
+  $("#ratio").querySelectorAll("button").forEach(b=>b.classList.toggle("on",b.dataset.v===common.ratio));
+}
+function renderRefs(){
+  $("#refs").innerHTML=refs.map((r,i)=>`<div class="r"><img src="${esc(r.url)}" alt=""><button data-i="${i}" title="Remove">×</button></div>`).join("")+(refs.length<3?'<button class="btn small" id="addRef">+ From library</button>':"");
+}
+function rebuild(force){ if(dirty&&!force) return; $("#prompt").value=PS.buildPrompt(treatment,vals[treatment],common); dirty=false; $("#reset").hidden=true; }
+
+$("#tiles").onclick=e=>{const b=e.target.closest(".tile"); if(!b) return; treatment=b.dataset.k; dirty=false; renderTiles(); renderForm(); rebuild(true);};
+$("#fields").addEventListener("input",e=>{const f=e.target.dataset.f; if(!f) return; vals[treatment][f]=e.target.value; rebuild();});
+$("#segment").onchange=e=>{common.segment=e.target.value; rebuild();};
+$("#category").oninput=e=>{common.category=e.target.value; rebuild();};
+$("#ratio").onclick=e=>{const b=e.target.closest("button"); if(!b) return; common.ratio=b.dataset.v; $("#ratio").querySelectorAll("button").forEach(x=>x.classList.toggle("on",x===b)); rebuild();};
+$("#prompt").oninput=()=>{dirty=true; $("#reset").hidden=false;};
+$("#reset").onclick=()=>rebuild(true);
+$("#copy").onclick=async()=>{try{await navigator.clipboard.writeText($("#prompt").value); PS.toast("Prompt copied");}catch(e){$("#prompt").select(); document.execCommand("copy");}};
+$("#refs").onclick=async e=>{
+  if(e.target.id==="addRef"){ const it=await PS.pickAsset(["image","generated"],"Choose a style reference"); if(it&&!refs.some(r=>r.url===it.url)){refs.push(it); renderRefs();} }
+  const x=e.target.closest("[data-i]"); if(x){refs.splice(+x.dataset.i,1); renderRefs();}
+};
+
+function studioLink(url){ return "./?"+new URLSearchParams({new:common.ratio,img:url,treatment,segment:common.segment,category:common.category}); }
+$("#go").onclick=async()=>{
+  const prompt=$("#prompt").value.trim(), n=+$("#n").value, box=$("#results");
+  if(prompt.length<10) return PS.toast("Add a prompt first");
+  if(/\[[^\]]+\]/.test(prompt)) return PS.toast("Fill in the empty fields first (shown in [brackets])");
+  if(box.querySelector(".empty")) box.innerHTML="";
+  $("#go").disabled=true; $("#status").textContent=`Generating ${n} image${n>1?"s":""}… this can take up to a minute.`;
+  const label=[treatment,common.category].filter(Boolean).join("-");
+  const slots=Array.from({length:n},()=>{const d=document.createElement("div"); d.className="res"; d.innerHTML='<div class="t">Generating…</div>'; box.prepend(d); return d;});
+  const refUrls=refs.filter(r=>!r.offline).map(r=>r.url);
+  const out=await Promise.allSettled(slots.map(()=>PS.api("/api/generate",{method:"POST",body:{treatment,prompt,refs:refUrls,label}})));
+  let fails=0, lastErr="";
+  out.forEach((r,i)=>{
+    const d=slots[i];
+    if(r.status==="fulfilled"){
+      const it=r.value; d.innerHTML=`<div class="t"><img src="${esc(it.url)}" alt=""></div><div class="a"></div>`;
+      const a=d.querySelector(".a");
+      const link=document.createElement("a"); link.className="btn small primary"; link.href=studioLink(it.url); link.textContent="Use in Studio"; link.style.textDecoration="none"; a.appendChild(link);
+      const open=document.createElement("a"); open.className="btn small"; open.href=it.url; open.target="_blank"; open.rel="noopener"; open.textContent="Open"; open.style.cssText="text-decoration:none;color:inherit"; a.appendChild(open);
+    } else { fails++; lastErr=r.reason.message; d.innerHTML=`<div class="t">${esc(r.reason.message)}</div>`; }
+  });
+  $("#go").disabled=false;
+  $("#status").textContent = fails? `${fails} of ${n} failed: ${lastErr}` : "Saved to the Library under Generated.";
+};
+
+(async()=>{
+  cfg=await PS.config();
+  if(cfg.offline) $("#note").innerHTML='<div class="note"><b>Shared storage is not connected</b>, so images can\'t be generated or saved. You can still build and copy prompts.</div>', $("#go").disabled=true;
+  else if(!cfg.generation) $("#note").innerHTML='<div class="note"><b>Image generation isn\'t switched on yet.</b> Ask the admin to set <code>OPENAI_API_KEY</code> in Vercel. You can still build and copy prompts.</div>', $("#go").disabled=true;
+  else if(cfg.mock) $("#note").innerHTML='<div class="note">Mock mode: placeholder images only.</div>';
+})();
+renderTiles(); renderForm(); renderRefs(); rebuild(true);
+</script>
+</body>
+</html>

@@ -1,0 +1,8 @@
+{
+  "name": "pills-studio",
+  "private": true,
+  "type": "module",
+  "scripts": { "dev": "node dev-server.js" },
+  "dependencies": { "@vercel/blob": "^1.0.0" },
+  "engines": { "node": ">=20" }
+}
