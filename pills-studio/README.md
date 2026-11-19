@@ -1,4 +1,4 @@
-# Pills Studio
+# Glance Pills Studio
 
 Team tool for making Glance chat starter pills to the visual system. Three pages:
 
