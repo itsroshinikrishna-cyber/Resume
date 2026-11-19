@@ -213,7 +213,7 @@ $("#btnTpl").onclick=()=>{
 };
 
 /* ---------- Settings ---------- */
-function bindSeg(id,key){ $(id).onclick=e=>{const b=e.target.closest("button"); if(!b) return; S.opts[key]=b.dataset.v; $$(id+" button").forEach(x=>x.classList.toggle("on",x===b)); if(key==="match"||key==="type") S.ov={}; update();}; }
+function bindSeg(id,key){ $(id).onclick=e=>{const b=e.target.closest("button"); if(!b) return; S.opts[key]=b.dataset.v; if(key==="match") S.matchTouched=true; $$(id+" button").forEach(x=>x.classList.toggle("on",x===b)); if(key==="match"||key==="type") S.ov={}; update();}; }
 bindSeg("#o-type","type"); bindSeg("#o-align","align"); bindSeg("#o-match","match");
 for(const [id,k] of [["#o-segment","segment"],["#o-treatment","treatment"],["#o-grad","grad"],["#o-palette","palette"]]) $(id).onchange=e=>{S.opts[k]=e.target.value; update();};
 $("#o-category").oninput=e=>{S.opts.category=e.target.value; update();};
@@ -263,7 +263,7 @@ function renderAll(){
   const info=computePairs();
   $$("[data-img]").forEach(el=>el.hidden=S.opts.type==="prompt"); $$("[data-prompt]").forEach(el=>el.hidden=S.opts.type!=="prompt");
   $("#parseInfo").textContent=info.rows.length?`${info.rows.length} line${info.rows.length>1?"s":""} read${info.header?" (with header row)":""}.`:"";
-  if(info.hasImgCol&&S.opts.match==="order"&&!S._warned){ S._warned=1; PS.toast("Your sheet has an image column: switch “Match by” to File name"); }
+  if(info.hasImgCol&&S.opts.match==="order"&&!S.matchTouched){ S.opts.match="filename"; document.querySelectorAll("#o-match button").forEach(x=>x.classList.toggle("on",x.dataset.v==="filename")); PS.toast("Your sheet has an image column, so images are matched by file name"); return renderAll(); }
   const box=$("#pairs"); box.innerHTML="";
   if(!S.pairs.length){ box.innerHTML='<div class="empty">Add images and copy to see your cards here.</div>'; $("#count").textContent=""; setBar(); return; }
   const imgs=sortedImages();
