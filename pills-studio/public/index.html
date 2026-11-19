@@ -57,6 +57,14 @@
   .seg button.on{background:var(--ink);color:#fff;border-color:var(--ink);position:relative}
   .sw button{height:34px;padding:0;border:2px solid #fff;outline:1px solid var(--line)}
   .sw button.on{outline:2px solid var(--ink)}
+  .swatches{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+  .swatches button{border:1px solid var(--line);background:#fff;padding:4px;text-align:left;font-size:10px;line-height:1.25;display:flex;flex-direction:column;gap:3px}
+  .swatches button i{display:block;height:26px;width:100%}
+  .swatches button b{font-weight:600}
+  .swatches button em{font-style:normal;color:var(--muted);font-family:ui-monospace,monospace;font-size:9px}
+  .swatches button.on{border:2px solid var(--ink);padding:3px}
+  .swatches button:disabled{opacity:.45;cursor:default}
+  .swatches button:disabled i{background:repeating-linear-gradient(45deg,#eee 0 4px,#fff 4px 8px)!important}
   .rules{background:#f7f5fb;border:1px solid var(--line);padding:8px 10px;font-size:12px;line-height:1.45;color:#3c3846}
   .rules ul{margin:4px 0 0;padding-left:16px}
   .count{font-size:12px;font-weight:700}
@@ -138,10 +146,11 @@
       <label>Zoom</label><input type="range" data-k="zoom" min="1" max="3" step="0.01">
       <label>Position X</label><input type="range" data-k="ox" min="-1" max="1" step="0.01">
       <label>Position Y</label><input type="range" data-k="oy" min="-1" max="1" step="0.01">
-      <label>Bottom gradient</label>
-      <div class="row">
-        <input type="color" data-k="scrimColor" id="scrimColor">
-        <label style="margin:0;font-weight:500"><input type="checkbox" data-k="scrimAuto"> Match image</label>
+      <label>Gradient colour <span style="font-weight:400;color:var(--muted)">(from the image palette)</span></label>
+      <div class="swatches" id="swatches"></div>
+      <div class="row" style="margin-top:8px">
+        <input type="color" data-k="scrimColor" id="scrimColor" title="Custom colour">
+        <span id="swatchHint" style="font-size:12px;color:var(--muted)">Custom colour</span>
       </div>
       <label>Gradient height</label><input type="range" data-k="scrimH" min="25" max="80" step="1">
     </fieldset>
@@ -181,6 +190,7 @@
 <div id="toast"></div>
 
 <script src="shared.js"></script>
+<script src="palette.js"></script>
 <script>
 "use strict";
 /* ---------- Strategy data ---------- */
@@ -209,7 +219,7 @@ const cur = () => state.cards.find(c=>c.id===sel);
 function blank(type){
   return { id:uid(), type, segment:"neutral", category:"", treatment:"contrejour",
     kicker:"", headline:"", sub:"", align:"left", img:null, zoom:1, ox:0, oy:0,
-    scrimAuto:true, scrimColor:"#20483a", scrimH:55,
+    scrimSource:"darkVibrant", scrimColor:"#20483a", scrimH:55,
     question:"", subtext:"", palette:"purple", mascot:"", createdAt:Date.now() };
 }
 function seed(){
@@ -219,7 +229,7 @@ function seed(){
   const c = Object.assign(blank("prompt"),{segment:"female",category:"Skincare",question:"Two under-\nrated hacks to find your undertone",createdAt:now-2000});
   return [a,b,c];
 }
-function normalize(c){ const o=Object.assign(blank(c.type||"image9"),c); if(typeof o.mascot!=="string") o.mascot=""; if(typeof o.img!=="string") o.img=null; return o; }
+function normalize(c){ const o=Object.assign(blank(c.type||"image9"),c); if(o.scrimAuto===false&&!c.scrimSource) o.scrimSource="custom"; delete o.scrimAuto; if(typeof o.mascot!=="string") o.mascot=""; if(typeof o.img!=="string") o.img=null; return o; }
 
 /* Cards are shared through the API when it is available, otherwise kept in this browser. */
 const Store = {
@@ -291,7 +301,7 @@ function loadImg(src){
   });
 }
 let redrawQ=false;
-function scheduleRedraw(){ if(redrawQ) return; redrawQ=true; requestAnimationFrame(()=>{ redrawQ=false; drawPreview(); state.cards.forEach(drawThumb); }); }
+function scheduleRedraw(){ if(redrawQ) return; redrawQ=true; requestAnimationFrame(()=>{ redrawQ=false; drawPreview(); state.cards.forEach(drawThumb); renderSwatches(); }); }
 
 /* ---------- Rendering ---------- */
 function coverRect(img,c,W,H){
@@ -322,13 +332,26 @@ function setFont(ctx,weight,size,ls){
   ctx.font=`${weight} ${size}px "DM Sans", system-ui, sans-serif`;
   if("letterSpacing" in ctx) ctx.letterSpacing=(ls||0)+"px";
 }
+const palCache=new Map();
+function paletteFor(src){
+  if(!src) return null; if(palCache.has(src)) return palCache.get(src);
+  const img=getImg(src); if(!img) return null;
+  let p=null; try{ p=Palette.extract(img); }catch(e){}
+  palCache.set(src,p); return p;
+}
+function gradientColor(c,img,W,H){
+  if(c.scrimSource==="custom"||!img) return hex2rgb(c.scrimColor);
+  const pal=paletteFor(c.img);
+  const sw=pal&&(pal[c.scrimSource]||pal.dominant);
+  return sw?sw.rgb:sampleBottom(img,c,W,H);
+}
 function drawImageCard(ctx,c,W,H){
   const img=getImg(c.img);
   ctx.fillStyle="#1b1b1f"; ctx.fillRect(0,0,W,H);
   if(img){ drawCover(ctx,img,c,W,H); }
   else { ctx.fillStyle="#8d8a97"; setFont(ctx,500,9,0); ctx.textAlign="center"; ctx.fillText("Add an image",W/2,H/2); }
   // bottom gradient
-  const col = c.scrimAuto && img ? sampleBottom(img,c,W,H) : hex2rgb(c.scrimColor);
+  const col = gradientColor(c,img,W,H);
   const dark = col.map(v=>Math.round(v*.45));
   const top = H*(1-c.scrimH/100);
   const g=ctx.createLinearGradient(0,top,0,H);
@@ -422,8 +445,28 @@ function syncUI(){
   });
   const t=TREATMENTS[c.treatment]||TREATMENTS.contrejour;
   $("#rules").innerHTML=`<b>${t.name}</b><br>${t.style}<ul>${t.rules.map(r=>`<li>${r}</li>`).join("")}</ul>`;
-  renderMascots();
+  renderMascots(); renderSwatches();
 }
+const SW_LABEL={dominant:"Dominant",darkVibrant:"Dark Vibrant",vibrant:"Vibrant",lightVibrant:"Light Vibrant",darkMuted:"Dark Muted",muted:"Muted",lightMuted:"Light Muted"};
+function renderSwatches(){
+  const c=cur(), box=$("#swatches"); if(!c||!box) return;
+  const pal=c.type==="prompt"?null:paletteFor(c.img);
+  box.innerHTML="";
+  for(const k of Palette.NAMES){
+    const sw=pal&&pal[k], b=document.createElement("button");
+    b.dataset.s=k; b.disabled=!sw; b.className=c.scrimSource===k?"on":"";
+    b.title=sw?`${SW_LABEL[k]} ${sw.hex}`:`${SW_LABEL[k]}: no matching colour in this image`;
+    b.innerHTML=`<i style="background:${sw?sw.hex:"#eee"}"></i><b>${SW_LABEL[k]}</b><em>${sw?sw.hex:"none"}</em>`;
+    box.append(b);
+  }
+  const col=gradientColor(c,getImg(c.img),170,310), lum=(0.2126*col[0]+0.7152*col[1]+0.0722*col[2])/255;
+  $("#swatchHint").textContent = !c.img ? "Add an image to read its palette."
+    : lum>0.55 ? "This colour is light; white text may be hard to read." : c.scrimSource==="custom" ? "Custom colour" : "Using "+(SW_LABEL[c.scrimSource]||"Dominant")+" from the image.";
+}
+$("#swatches").addEventListener("click",e=>{
+  const b=e.target.closest("button[data-s]"); if(!b||b.disabled) return;
+  const c=cur(); c.scrimSource=b.dataset.s; renderSwatches(); refresh(); save(c);
+});
 function renderMascots(){
   const c=cur(); const box=$("#mascots"); box.innerHTML="";
   const mk=(url,inner)=>{ const b=document.createElement("button"); b.className=(url===c.mascot)?"on":""; b.append(inner); b.onclick=()=>{ c.mascot=url; renderMascots(); refresh(); save(c); }; box.append(b); };
@@ -440,7 +483,7 @@ document.addEventListener("input",e=>{
   const el=e.target.closest("#ctrl [data-k]"); if(!el||el.classList.contains("seg")) return;
   const c=cur(), k=el.dataset.k;
   c[k]= el.type==="checkbox"?el.checked : el.type==="range"?parseFloat(el.value) : el.value;
-  if(k==="scrimColor") c.scrimAuto=false, $('[data-k="scrimAuto"]').checked=false;
+  if(k==="scrimColor"){ c.scrimSource="custom"; renderSwatches(); }
   if(k==="treatment") syncUI();
   if(k==="segment"||k==="category") buildList(); else refresh();
   save();
