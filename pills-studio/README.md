@@ -21,6 +21,8 @@ Card rules are built in: 9:16 (170x310), 4:5 (170x212) and 1:1 prompt cards (170
 bottom-left or bottom-right text only, max 7 words, square corners, four brand colours. PNGs export at 4x.
 
 ## Deploy on Vercel
+**New to this? Follow [DEPLOY.md](DEPLOY.md)**, a step-by-step guide. The short version:
+
 1. Import the repo, set **Root Directory** to `pills-studio`, framework preset **Other** (no build step).
 2. **Storage → Create → Blob** and connect it to the project. This adds `BLOB_READ_WRITE_TOKEN`, which turns on the shared library and shared cards.
 3. Add environment variables:
