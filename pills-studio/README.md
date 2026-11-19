@@ -5,6 +5,7 @@ Team tool for making Glance chat starter pills to the visual system. Three pages
 | Page | What it does |
 |---|---|
 | **Studio** (`/`) | Build cards. Anyone can upload or pick an image, edit the copy, choose a mascot, and export PNGs. Cards are shared: everyone sees and can edit the same set. |
+| **Bulk** (`/bulk`) | Drop many images and paste or upload the copy (Excel, CSV or lines). Images are matched to copy by order or by file name, previewed as real cards, then created in one click. Each card opens in the Studio to fine-tune, with Prev/Next to step through the batch. |
 | **Library** (`/library`) | Image dashboard and mascot dashboard (plus everything generated). Anyone can upload, reuse, copy links or delete. |
 | **Generate** (`/generate`) | Pick one of the three photo pills, fill in its focus, review the prompt and generate images. Results are saved to the Library and can be sent straight to the Studio. |
 
@@ -12,6 +13,9 @@ The three pills, each with a different focus:
 1. **Contre-jour beauty close-ups**: light and texture (premium, cinematic)
 2. **Playful conceptual portraits**: expression and twist (fun, human)
 3. **Hero product still life**: product and place (clean, product-led)
+
+Gradient colours are picked from each image with an Android-Palette-style extractor (`public/palette.js`): every image gets
+3 suggested options (Option 1 is applied by default), plus the full Dominant / Vibrant / Muted palette and a custom colour.
 
 Card rules are built in: 9:16 (170x310), 4:5 (170x212) and 1:1 prompt cards (170x170), DM Sans semibold/black,
 bottom-left or bottom-right text only, max 7 words, square corners, four brand colours. PNGs export at 4x.
@@ -35,3 +39,8 @@ MOCK_GENERATE=1 node dev-server.js   # http://localhost:3000, data in ./.data, p
 ## Notes
 - Cards use last-save-wins: if two people edit the same card at once, the later save replaces the earlier one.
 - Generation goes through `api/generate.js`. To use another image model, replace `callOpenAI` there.
+
+## Bulk upload sheet format
+Paste from Excel/Sheets, upload `.xlsx` / `.csv`, or type one card per line (`kicker | headline | subline`).
+With a header row you can set per-card values: `image, kicker, headline, sub, segment, category, align, format, treatment, gradient` (1, 2 or 3).
+Use `\n` inside a cell for a line break. A template CSV is downloadable on the page.

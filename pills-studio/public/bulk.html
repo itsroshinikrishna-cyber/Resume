@@ -1,0 +1,329 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Bulk · Glance Pills Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700;9..40,900&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  :root{--bg:#f4f3f6;--panel:#fff;--ink:#15131a;--muted:#6c6877;--line:#dcd8e4;--accent:#6b3df0;--warn:#d6322e;--ok:#1c8a4f}
+  *{box-sizing:border-box;border-radius:0!important}
+  body{margin:0;font-family:"DM Sans",system-ui,sans-serif;background:var(--bg);color:var(--ink);font-size:14px;padding-bottom:80px}
+  button,select,input,textarea{font:inherit;color:inherit}
+  header{display:flex;align-items:center;gap:16px;padding:0 16px;background:var(--panel);border-bottom:1px solid var(--line);min-height:54px}
+  header h1{font-size:16px;font-weight:900;letter-spacing:.04em;text-transform:uppercase;margin:0;padding:14px 0}
+  main{max-width:1200px;margin:0 auto;padding:20px 16px}
+  h2{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:26px 0 10px}
+  h2 b{color:var(--ink)}
+  .card{background:#fff;border:1px solid var(--line);padding:16px}
+  .intro{color:var(--muted);max-width:760px;line-height:1.5;margin:0}
+  .btn{border:1px solid var(--ink);background:#fff;padding:8px 12px;font-weight:600;cursor:pointer}
+  .btn:hover{background:#eee}.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}.btn.primary:hover{background:#5a2fd6}
+  .btn.primary:disabled{opacity:.5;cursor:default}.btn.small{padding:4px 8px;font-size:12px}
+  .drop{border:1px dashed var(--muted);padding:22px;text-align:center;color:var(--muted);background:#fff;cursor:pointer}
+  .drop.over{background:#f1eef8;border-color:var(--accent)}
+  .thumbs{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+  .thumb{position:relative;width:64px;border:1px solid var(--line);background:#fff}
+  .thumb img{width:100%;height:84px;object-fit:cover;display:block}
+  .thumb span{display:block;font-size:10px;padding:2px 3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--muted)}
+  .thumb button{position:absolute;top:0;right:0;border:0;background:#15131a;color:#fff;width:18px;height:18px;line-height:16px;padding:0;cursor:pointer}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  textarea{width:100%;border:1px solid var(--line);background:#fff;padding:10px;resize:vertical;font-family:ui-monospace,Menlo,monospace;font-size:13px;line-height:1.5}
+  input[type=text],select{border:1px solid var(--line);background:#fff;padding:8px;width:100%}
+  label{display:block;font-size:12px;font-weight:600;margin:0 0 4px}
+  .grid2{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px}
+  .seg{display:flex}.seg button{flex:1;border:1px solid var(--line);background:#fff;padding:8px 4px;font-weight:600;font-size:12px;margin-left:-1px;cursor:pointer}
+  .seg button:first-child{margin-left:0}.seg button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .hint{font-size:12px;color:var(--muted);margin-top:6px;line-height:1.45}
+  .hint code,.intro code{background:#efecf5;padding:1px 4px;font-size:12px}
+  .pairs{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px}
+  .pair{background:#fff;border:1px solid var(--line);padding:10px;display:flex;flex-direction:column;gap:8px}
+  .pair.skip{opacity:.4}
+  .pair .cv{display:flex;justify-content:center;background:#555;padding:8px}
+  .pair canvas{display:block;box-shadow:0 4px 14px rgba(0,0,0,.3)}
+  .pair .top{display:flex;justify-content:space-between;align-items:center;font-size:12px;font-weight:700}
+  .badge{font-size:11px;font-weight:600;padding:1px 6px;background:#fdecea;color:var(--warn);margin-right:4px;display:inline-block}
+  .badge.ok{background:#e6f4ec;color:var(--ok)}
+  .pair select{padding:5px;font-size:12px}
+  .opts{display:grid;grid-template-columns:repeat(3,1fr);gap:4px}
+  .opts button{border:1px solid var(--line);background:#fff;padding:2px;cursor:pointer;font-size:10px;text-align:left}
+  .opts button i{display:block;height:20px}
+  .opts button.on{border:2px solid var(--ink);padding:1px}
+  .opts button:disabled{opacity:.4;cursor:default}
+  .pair label.inc{font-weight:500;display:flex;gap:6px;align-items:center;margin:0}
+  .bar{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--ink);padding:12px 16px;display:flex;gap:14px;align-items:center;justify-content:center;z-index:5}
+  .bar span{color:var(--muted)}
+  .empty{color:var(--muted);background:#fff;border:1px dashed var(--line);padding:40px 20px;text-align:center;grid-column:1/-1}
+  .note{background:#fff7e0;border:1px solid #ecd58a;padding:10px 12px;margin-top:14px;font-size:13px}
+</style>
+</head>
+<body>
+<header><h1>Glance Pills Studio</h1><nav id="nav"></nav></header>
+<main>
+  <p class="intro">Make many cards at once. Add your images, paste or upload the copy (from a spreadsheet or an Excel file), check the matches, then create all the cards. Each one opens in the Studio editor so you can fine-tune it.</p>
+  <div id="note"></div>
+
+  <h2><b>1.</b> Images</h2>
+  <div class="card">
+    <div class="drop" id="drop">Drop your images here, or click to choose (as many as you like)</div>
+    <input type="file" id="file" accept="image/*" multiple hidden>
+    <div class="row" style="margin-top:10px"><button class="btn small" id="btnLib">Add from shared library…</button>
+      <label style="margin:0;font-weight:500"><input type="checkbox" id="sortNames" checked> Order images by file name (1, 2, 10)</label>
+      <button class="btn small" id="btnClearImgs">Remove all</button></div>
+    <div class="thumbs" id="thumbs"></div>
+  </div>
+
+  <h2><b>2.</b> Copy</h2>
+  <div class="card">
+    <textarea id="copy" rows="9" spellcheck="false" placeholder="One card per line. Paste straight from Excel or Google Sheets, or type it:&#10;&#10;Find | Matcha mask | For your skin&#10;5 gym go-tos | For a beginner&#10;Hair routines"></textarea>
+    <div class="row" style="margin-top:10px">
+      <button class="btn small" id="btnXlsx">Upload Excel / CSV…</button>
+      <input type="file" id="xfile" accept=".xlsx,.xls,.xlsm,.ods,.csv,.tsv,.txt" hidden>
+      <button class="btn small" id="btnTpl">Download template (CSV)</button>
+      <span id="parseInfo" class="hint" style="margin:0 0 0 6px"></span>
+    </div>
+    <div class="hint">
+      Columns on each line: <code>kicker | headline | subline</code>, or <code>headline | subline</code>, or just <code>headline</code>.
+      With a header row you can also use <code>image</code>, <code>segment</code>, <code>category</code>, <code>align</code>, <code>format</code>, <code>treatment</code> and <code>gradient</code> (1, 2 or 3) to set things per card.
+      Type <code>\n</code> inside a cell for a line break.
+    </div>
+  </div>
+
+  <h2><b>3.</b> Settings for every card <span style="text-transform:none;letter-spacing:0;font-weight:400">(a column in your sheet overrides these)</span></h2>
+  <div class="card">
+    <div class="grid2">
+      <div><label>Format</label><div class="seg" id="o-type"><button data-v="image9" class="on">9:16</button><button data-v="image45">4:5</button><button data-v="prompt">Prompt 1:1</button></div></div>
+      <div><label>Segment</label><select id="o-segment"><option value="female">Female</option><option value="male">Male</option><option value="neutral" selected>Neutral</option></select></div>
+      <div><label>Category</label><input type="text" id="o-category" placeholder="Skincare"></div>
+      <div data-img><label>Treatment</label><select id="o-treatment"></select></div>
+      <div data-img><label>Text side</label><div class="seg" id="o-align"><button data-v="left" class="on">Left</button><button data-v="right">Right</button><button data-v="alt">Alternate</button></div></div>
+      <div data-img><label>Gradient colour</label><select id="o-grad">
+        <option value="sugg1">Option 1 (best match)</option><option value="sugg2">Option 2</option><option value="sugg3">Option 3</option>
+        <option value="darkVibrant">Dark Vibrant</option><option value="vibrant">Vibrant</option><option value="darkMuted">Dark Muted</option><option value="muted">Muted</option><option value="dominant">Dominant</option></select></div>
+      <div data-img><label>Match images to copy by</label><div class="seg" id="o-match"><button data-v="order" class="on">Order</button><button data-v="filename">File name</button></div></div>
+      <div data-prompt hidden><label>Card colour</label><select id="o-palette"><option value="rotate">Rotate the 4 brand colours</option><option value="purple">Purple</option><option value="pink">Pink</option><option value="blue">Blue</option><option value="yellow">Yellow</option></select></div>
+    </div>
+    <div class="hint" data-img>Order: the 1st image goes with the 1st line, and so on. File name: put the image's file name in an <code>image</code> column. Each image's gradient is picked from the image itself; you can change it per card below.</div>
+  </div>
+
+  <h2><b>4.</b> Check the matches <span id="count" style="text-transform:none;letter-spacing:0;font-weight:400"></span></h2>
+  <div class="pairs" id="pairs"><div class="empty">Add images and copy to see your cards here.</div></div>
+</main>
+
+<div class="bar"><span id="barInfo">Nothing to create yet</span><button class="btn primary" id="create" disabled>Create cards and open in Studio</button></div>
+
+<script src="shared.js"></script>
+<script src="palette.js"></script>
+<script src="render.js"></script>
+<script>
+"use strict";
+PS.nav("bulk");
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)], esc=PS.esc;
+const S={ images:[], opts:{type:"image9",segment:"neutral",category:"",treatment:"contrejour",align:"left",grad:"sugg1",match:"order",palette:"rotate"}, ov:{}, pairs:[] };
+const BRAND=["purple","pink","blue","yellow"], MAX_WORDS=7;
+$("#o-treatment").innerHTML=Object.entries(PS.TREATMENTS).map(([k,t])=>`<option value="${k}">${esc(t.name)}</option>`).join("");
+
+/* ---------- Parsing the copy ---------- */
+const norm=s=>String(s==null?"":s).toLowerCase().replace(/[^a-z0-9]/g,"");
+const SYN={image:["image","file","filename","img","photo"],kicker:["kicker","above","top","smalllineabove"],headline:["headline","title","heading","copy","text"],
+  sub:["sub","subline","subtitle","below","bottom","smalllinebelow"],segment:["segment","gender","audience"],category:["category","cat","topic"],
+  align:["align","alignment","side","textside"],format:["format","type","ratio"],treatment:["treatment","style"],gradient:["gradient","colour","color","swatch"],
+  question:["question","prompt"],subtext:["subtext"],palette:["palette"]};
+const KEYOF={}; for(const k in SYN) SYN[k].forEach(a=>KEYOF[a]=k);
+const unesc=v=>String(v).replace(/\\n/g,"\n").trim();
+
+function parseCopy(text){
+  const lines=text.split(/\r?\n/).filter(l=>l.trim()!=="");
+  if(!lines.length) return {rows:[],header:false};
+  const delim=lines.some(l=>l.includes("\t"))?"\t":lines.some(l=>l.includes("|"))?"|":null;
+  const table=lines.map(l=>delim?l.split(delim).map(c=>c.trim()):[l.trim()]);
+  const rec=table[0].filter(c=>KEYOF[norm(c)]).length;
+  const header=rec>=1&&rec>=table[0].length/2;
+  let rows;
+  if(header){
+    const keys=table[0].map(c=>KEYOF[norm(c)]||null);
+    rows=table.slice(1).map(cells=>{const o={}; keys.forEach((k,i)=>{ if(k&&cells[i]!==undefined&&cells[i]!=="") o[k]=unesc(cells[i]); }); return o;});
+  } else {
+    rows=table.map(cells=>{ cells=cells.map(unesc);
+      if(cells.length===1) return {headline:cells[0]};
+      if(cells.length===2) return {headline:cells[0],sub:cells[1]};
+      return {kicker:cells[0],headline:cells[1],sub:cells[2]}; });
+  }
+  return {rows:rows.filter(r=>Object.keys(r).length),header};
+}
+const normSeg=v=>{v=norm(v); return !v?null:v[0]==="f"||v==="women"?"female":v[0]==="m"?"male":"neutral";};
+const normAlign=v=>{v=norm(v); return !v?null:v[0]==="r"?"right":"left";};
+const normFormat=v=>{v=norm(v); return v==="45"||v==="4x5"||v==="image45"?"image45":v==="916"||v==="9x16"||v==="image9"?"image9":v==="11"||v==="prompt"||v==="1x1"?"prompt":null;};
+const normTreat=v=>{v=norm(v); return !v?null:v.startsWith("contre")?"contrejour":v.startsWith("play")?"playful":v.startsWith("hero")?"hero":null;};
+const GRADS={darkvibrant:"darkVibrant",vibrant:"vibrant",darkmuted:"darkMuted",muted:"muted",dominant:"dominant",lightvibrant:"lightVibrant",lightmuted:"lightMuted"};
+const normGrad=v=>{v=norm(v); return !v?null:/^[123]$/.test(v)?"sugg"+v:v.startsWith("option")&&/[123]$/.test(v)?"sugg"+v.slice(-1):GRADS[v]||null;};
+const normPal=v=>BRAND.includes(norm(v))?norm(v):null;
+
+/* ---------- Images ---------- */
+const stripExt=n=>String(n).replace(/\.[a-z0-9]+$/i,"");
+const sortedImages=()=>$("#sortNames").checked?[...S.images].sort((a,b)=>a.name.localeCompare(b.name,undefined,{numeric:true,sensitivity:"base"})):S.images;
+async function addFiles(files){
+  const list=[...files].filter(f=>f.type.startsWith("image/")); let n=0;
+  for(const f of list){ try{ S.images.push({id:CR.uid(),name:f.name,src:await PS.readFile(f,1600,"jpg"),file:f}); n++; }catch(e){ PS.toast(f.name+": "+e.message); } }
+  if(n){ S.ov={}; renderThumbs(); update(); }
+}
+function renderThumbs(){
+  $("#thumbs").innerHTML=sortedImages().map(im=>`<div class="thumb" title="${esc(im.name)}"><img src="${esc(im.src)}" alt=""><span>${esc(im.name)}</span><button data-id="${im.id}" title="Remove">×</button></div>`).join("");
+}
+$("#thumbs").onclick=e=>{const b=e.target.closest("button[data-id]"); if(!b) return; S.images=S.images.filter(i=>i.id!==b.dataset.id); S.ov={}; renderThumbs(); update();};
+$("#btnClearImgs").onclick=()=>{S.images=[]; S.ov={}; renderThumbs(); update();};
+$("#sortNames").onchange=()=>{S.ov={}; renderThumbs(); update();};
+$("#drop").onclick=()=>$("#file").click();
+$("#file").onchange=e=>{addFiles(e.target.files); e.target.value="";};
+["dragover","dragleave","drop"].forEach(t=>$("#drop").addEventListener(t,e=>{e.preventDefault(); $("#drop").classList.toggle("over",t==="dragover"); if(t==="drop") addFiles(e.dataTransfer.files);}));
+$("#btnLib").onclick=async()=>{
+  const it=await PS.pickAsset(["image","generated"],"Add an image"); if(!it) return;
+  if(!S.images.some(i=>i.src===it.url)){ S.images.push({id:CR.uid(),name:it.name||"image",src:it.url,url:it.url}); S.ov={}; renderThumbs(); update(); }
+};
+
+/* ---------- Excel / CSV ---------- */
+function parseCSV(text){
+  const rows=[]; let row=[],cell="",q=false;
+  for(let i=0;i<text.length;i++){ const ch=text[i];
+    if(q){ if(ch==='"'){ if(text[i+1]==='"'){cell+='"';i++;} else q=false; } else cell+=ch; }
+    else if(ch==='"') q=true; else if(ch===","||ch===";"&&false){row.push(cell);cell="";}
+    else if(ch==="\n"||ch==="\r"){ if(ch==="\r"&&text[i+1]==="\n") i++; row.push(cell); rows.push(row); row=[]; cell=""; }
+    else cell+=ch; }
+  if(cell!==""||row.length){row.push(cell);rows.push(row);}
+  return rows;
+}
+const toTSV=aoa=>aoa.filter(r=>r.some(c=>String(c).trim()!=="")).map(r=>r.map(c=>String(c==null?"":c).replace(/\t/g," ").replace(/\r?\n/g,"\\n").trim()).join("\t")).join("\n");
+$("#btnXlsx").onclick=()=>$("#xfile").click();
+$("#xfile").onchange=async e=>{
+  const f=e.target.files[0]; e.target.value=""; if(!f) return;
+  try{
+    let aoa;
+    if(/\.(csv|tsv|txt)$/i.test(f.name)){ const t=await f.text(); aoa=/\.tsv$/i.test(f.name)?t.split(/\r?\n/).map(l=>l.split("\t")):parseCSV(t); }
+    else { if(!window.XLSX) throw new Error("The Excel reader didn't load. Save the sheet as CSV, or paste it into the box.");
+      const wb=XLSX.read(await f.arrayBuffer(),{type:"array"}); aoa=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,raw:false,defval:""}); }
+    $("#copy").value=toTSV(aoa); S.ov={}; update(); PS.toast("Loaded "+f.name);
+  }catch(err){ PS.toast(err.message); }
+};
+$("#btnTpl").onclick=()=>{
+  const csv="image,kicker,headline,sub,segment,category,align,gradient\r\n01-matcha.jpg,Find,Matcha mask,For your skin,male,Skincare,right,1\r\n02-gym.jpg,,5 gym go-tos,For a beginner,male,Fitness,left,2\r\n";
+  const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"})); a.download="pills-template.csv"; a.click();
+};
+
+/* ---------- Settings ---------- */
+function bindSeg(id,key){ $(id).onclick=e=>{const b=e.target.closest("button"); if(!b) return; S.opts[key]=b.dataset.v; $$(id+" button").forEach(x=>x.classList.toggle("on",x===b)); if(key==="match"||key==="type") S.ov={}; update();}; }
+bindSeg("#o-type","type"); bindSeg("#o-align","align"); bindSeg("#o-match","match");
+for(const [id,k] of [["#o-segment","segment"],["#o-treatment","treatment"],["#o-grad","grad"],["#o-palette","palette"]]) $(id).onchange=e=>{S.opts[k]=e.target.value; update();};
+$("#o-category").oninput=e=>{S.opts.category=e.target.value; update();};
+$("#copy").oninput=()=>update();
+
+/* ---------- Pairing + cards ---------- */
+function findByName(name,imgs){
+  if(!name) return null; const n=norm(stripExt(name)); if(!n) return null;
+  return imgs.find(i=>norm(stripExt(i.name))===n)||imgs.find(i=>norm(stripExt(i.name)).includes(n)||n.includes(norm(stripExt(i.name))))||null;
+}
+function computePairs(){
+  const {rows,header}=parseCopy($("#copy").value), imgs=sortedImages(), o=S.opts, pairs=[];
+  const hasImgCol=header&&rows.some(r=>r.image);
+  const typeOf=r=>normFormat(r&&r.format)||o.type;
+  if(o.type==="prompt"&&!rows.some(r=>normFormat(r.format)&&normFormat(r.format)!=="prompt")){
+    rows.forEach(r=>pairs.push({row:r,img:null}));
+  } else if(o.match==="filename"){
+    const used=new Set();
+    rows.forEach(r=>{const im=typeOf(r)==="prompt"?null:findByName(r.image,imgs); if(im) used.add(im.id); pairs.push({row:r,img:im});});
+    imgs.filter(i=>!used.has(i.id)).forEach(i=>pairs.push({row:null,img:i}));
+  } else {
+    const n=Math.max(rows.length,imgs.length); for(let i=0;i<n;i++) pairs.push({row:rows[i]||null,img:imgs[i]||null});
+  }
+  S.pairs=pairs;
+  return {rows,header,hasImgCol,nImgs:imgs.length};
+}
+function makeCard(p,i){
+  const o=S.opts, r=p.row||{}, ov=S.ov[i]||{}, type=normFormat(r.format)||o.type, c=CR.blank(type);
+  c.segment=normSeg(r.segment)||o.segment; c.category=(r.category||o.category||"").slice(0,60);
+  if(type==="prompt"){
+    c.question=r.question||r.headline||""; c.subtext=r.subtext||r.sub||"";
+    c.palette=normPal(r.palette)||(o.palette==="rotate"?BRAND[i%4]:o.palette);
+  } else {
+    c.treatment=normTreat(r.treatment)||o.treatment; c.kicker=r.kicker||""; c.headline=r.headline||""; c.sub=r.sub||"";
+    c.align=normAlign(r.align)||(o.align==="alt"?(i%2?"right":"left"):o.align);
+    c.scrimSource=ov.grad||normGrad(r.gradient)||o.grad;
+    const im=ov.img!==undefined?(ov.img===-1?null:S.images.find(x=>x.id===ov.img)):p.img;
+    c.img=im?(im.url||im.src):null; c._im=im;
+  }
+  return c;
+}
+const words=c=>[c.kicker,c.headline,c.sub].join(" ").trim().split(/\s+/).filter(Boolean).length;
+
+/* ---------- Render ---------- */
+let t1; function update(){ clearTimeout(t1); t1=setTimeout(renderAll,200); }
+function renderAll(){
+  const info=computePairs();
+  $$("[data-img]").forEach(el=>el.hidden=S.opts.type==="prompt"); $$("[data-prompt]").forEach(el=>el.hidden=S.opts.type!=="prompt");
+  $("#parseInfo").textContent=info.rows.length?`${info.rows.length} line${info.rows.length>1?"s":""} read${info.header?" (with header row)":""}.`:"";
+  if(info.hasImgCol&&S.opts.match==="order"&&!S._warned){ S._warned=1; PS.toast("Your sheet has an image column: switch “Match by” to File name"); }
+  const box=$("#pairs"); box.innerHTML="";
+  if(!S.pairs.length){ box.innerHTML='<div class="empty">Add images and copy to see your cards here.</div>'; $("#count").textContent=""; setBar(); return; }
+  const imgs=sortedImages();
+  S.pairs.forEach((p,i)=>{
+    const c=makeCard(p,i), ov=S.ov[i]||{}, d=document.createElement("div"); d.className="pair"+(ov.skip?" skip":"");
+    const isPrompt=c.type==="prompt", [W,H]=CR.SIZES[c.type], badges=[];
+    if(!isPrompt&&!c.img) badges.push('<span class="badge">No image</span>');
+    if(!(isPrompt?c.question:c.headline||c.kicker||c.sub)) badges.push('<span class="badge">No copy</span>');
+    if(!isPrompt&&words(c)>MAX_WORDS) badges.push(`<span class="badge">${words(c)} words (max ${MAX_WORDS})</span>`);
+    d.innerHTML=`<div class="top"><span>Card ${i+1}</span><span>${badges.join("")||'<span class="badge ok">Ready</span>'}</span></div>
+      <div class="cv"><canvas></canvas></div>
+      ${isPrompt?"":`<select data-i="${i}" data-r="img"><option value="-1">No image</option>${imgs.map(im=>`<option value="${im.id}" ${c._im&&c._im.id===im.id?"selected":""}>${esc(im.name)}</option>`).join("")}</select><div class="opts" data-i="${i}"></div>`}
+      <label class="inc"><input type="checkbox" data-i="${i}" data-r="inc" ${ov.skip?"":"checked"}> Include</label>`;
+    box.appendChild(d);
+    const cv=d.querySelector("canvas"); CR.render(c,cv,2); cv.style.width=W+"px"; cv.style.height=H+"px";
+    if(!isPrompt){
+      const pal=c.img&&CR.paletteFor(c.img), sg=pal&&pal.suggestions||[], wrap=d.querySelector(".opts");
+      for(let k=0;k<3;k++){ const b=document.createElement("button"), s=sg[k]; b.dataset.g="sugg"+(k+1); b.disabled=!s; b.className=c.scrimSource==="sugg"+(k+1)?"on":"";
+        b.title=s?`Option ${k+1}: ${s.label} ${s.hex}`:"Add an image first"; b.innerHTML=`<i style="background:${s?s.hex:"#eee"}"></i>Option ${k+1}`; wrap.appendChild(b); }
+    }
+  });
+  $("#count").textContent=`(${S.pairs.length} card${S.pairs.length>1?"s":""})`;
+  setBar();
+}
+$("#pairs").addEventListener("change",e=>{
+  const i=e.target.dataset.i; if(i===undefined) return; const ov=S.ov[i]=S.ov[i]||{};
+  if(e.target.dataset.r==="img") ov.img=e.target.value==="-1"?-1:e.target.value; else ov.skip=!e.target.checked;
+  renderAll();
+});
+$("#pairs").addEventListener("click",e=>{
+  const b=e.target.closest(".opts button"); if(!b||b.disabled) return;
+  const i=b.parentElement.dataset.i; (S.ov[i]=S.ov[i]||{}).grad=b.dataset.g; renderAll();
+});
+CR.onImageLoad=()=>update();
+function included(){ return S.pairs.map((p,i)=>({p,i})).filter(({p,i})=>!(S.ov[i]&&S.ov[i].skip)&&(p.row||p.img)); }
+function setBar(){ const n=included().length; $("#create").disabled=!n; $("#barInfo").textContent=n?`${n} card${n>1?"s":""} ready to create`:"Nothing to create yet"; }
+
+/* ---------- Create ---------- */
+$("#create").onclick=async()=>{
+  const list=included(); if(!list.length) return;
+  const btn=$("#create"); btn.disabled=true;
+  try{
+    const cfg=await PS.config(), base=Date.now(), cards=[];
+    const need=[...new Set(list.map(({p,i})=>makeCard(p,i)._im).filter(im=>im&&!im.url&&im.file))];
+    for(let k=0;k<need.length;k++){ $("#barInfo").textContent=`Uploading images ${k+1} of ${need.length}…`; const it=await PS.uploadFile("image",need[k].file); need[k].url=it.url; }
+    list.forEach(({p,i},k)=>{ const c=makeCard(p,i); delete c._im; c.createdAt=base+(list.length-k); cards.push(c); });
+    if(cfg.offline){
+      let st={cards:[]}; try{ st=JSON.parse(localStorage.getItem("pillsStudio.v2"))||st; }catch(e){}
+      st.cards=[...cards,...(st.cards||[])]; localStorage.setItem("pillsStudio.v2",JSON.stringify(st));
+    } else {
+      for(let k=0;k<cards.length;k+=4){ $("#barInfo").textContent=`Saving cards ${Math.min(k+4,cards.length)} of ${cards.length}…`;
+        await Promise.all(cards.slice(k,k+4).map(c=>PS.api("/api/cards",{method:"PUT",body:{card:c}}))); }
+    }
+    location.href="./?open="+cards[0].id;
+  }catch(err){ PS.toast(err.message); btn.disabled=false; setBar(); }
+};
+
+(async()=>{ const cfg=await PS.config();
+  if(cfg.offline) $("#note").innerHTML='<div class="note"><b>Shared storage isn\'t connected</b>, so cards will be created in this browser only.</div>'; })();
+renderAll();
+</script>
+</body>
+</html>

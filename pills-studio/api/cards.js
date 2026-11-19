@@ -20,7 +20,7 @@ export function sanitize(c) {
     align: oneOf(c.align, ["left", "right"], "left"),
     img: url(c.img),
     zoom: num(c.zoom, 1, 3, 1), ox: num(c.ox, -1, 1, 0), oy: num(c.oy, -1, 1, 0),
-    scrimSource: oneOf(c.scrimSource, ["dominant", "darkVibrant", "vibrant", "lightVibrant", "darkMuted", "muted", "lightMuted", "custom"], "darkVibrant"),
+    scrimSource: oneOf(c.scrimSource, ["sugg1", "sugg2", "sugg3", "dominant", "darkVibrant", "vibrant", "lightVibrant", "darkMuted", "muted", "lightMuted", "custom"], "sugg1"),
     scrimColor: /^#[0-9a-fA-F]{6}$/.test(c.scrimColor) ? c.scrimColor : "#20483a",
     scrimH: num(c.scrimH, 25, 80, 55),
     question: str(c.question, 200), subtext: str(c.subtext, 40),

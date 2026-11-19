@@ -71,7 +71,7 @@ window.PS = (function () {
   function nav(active) {
     const n = document.getElementById("nav"); if (!n) return;
     n.className = "ps-nav";
-    n.innerHTML = [["studio", "./", "Studio"], ["library", "library", "Library"], ["generate", "generate", "Generate"]]
+    n.innerHTML = [["studio", "./", "Studio"], ["bulk", "bulk", "Bulk"], ["library", "library", "Library"], ["generate", "generate", "Generate"]]
       .map(([k, h, t]) => `<a href="${h}" class="${k === active ? "on" : ""}">${t}</a>`).join("");
   }
   let toastT;

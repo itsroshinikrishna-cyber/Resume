@@ -132,7 +132,35 @@
     }
     const total = swatches.reduce((a, s) => a + s.pop, 0) || 1;
     swatches.forEach(s => s.share = s.pop / total);
+    out.suggestions = suggest(out);
     return out;
+  }
+
+  /* Up to 3 distinct gradient colours, best first. White text sits on the gradient, so darker,
+     well-populated and reasonably saturated colours rank higher. If the image has fewer than
+     3 usable colours, darker variations of the best one fill the gaps. */
+  const PROFILE_LABEL = { darkVibrant: "Dark Vibrant", vibrant: "Vibrant", darkMuted: "Dark Muted", muted: "Muted", lightVibrant: "Light Vibrant", lightMuted: "Light Muted", dominant: "Dominant" };
+  function suggest(out) {
+    const cands = [], seen = new Set();
+    const add = (s, label) => { if (s && !seen.has(s.hex)) { seen.add(s.hex); cands.push({ s, label }); } };
+    ["darkVibrant", "vibrant", "darkMuted", "muted", "dominant", "lightVibrant", "lightMuted"].forEach(k => add(out[k], PROFILE_LABEL[k]));
+    out.swatches.forEach(s => add(s, "Palette colour"));
+    const maxPop = out.swatches.reduce((m, s) => Math.max(m, s.pop), 0) || 1;
+    const score = ({ s }) => {
+      const sat = s.hsl[1], l = s.hsl[2];
+      const dark = l <= 0.38 ? 1 : l >= 0.7 ? 0 : (0.7 - l) / 0.32;
+      return (0.5 * dark + 0.3 * (s.pop / maxPop) + 0.2 * Math.min(1, sat / 0.6)) * (l < 0.12 ? 0.5 : 1);
+    };
+    cands.sort((a, b) => score(b) - score(a));
+    const dist = (a, b) => Math.hypot(a.r - b.r, a.g - b.g, a.b - b.b);
+    const picked = [];
+    for (const c of cands) { if (picked.length < 3 && picked.every(p => dist(p.s, c.s) >= 48)) picked.push(c); }
+    for (const c of cands) { if (picked.length < 3 && !picked.includes(c)) picked.push(c); }
+    for (let k = 1; picked.length < 3 && picked.length > 0; k++) {
+      const b = picked[0].s, f = 1 - 0.3 * k;
+      picked.push({ s: swatch(Math.round(b.r * f), Math.round(b.g * f), Math.round(b.b * f), 0), label: "Darker" });
+    }
+    return picked.map(p => ({ r: p.s.r, g: p.s.g, b: p.s.b, rgb: p.s.rgb, hex: p.s.hex, label: p.label }));
   }
 
   // Browser: sample the image at ~112x112 area, like the Android default.
