@@ -1,0 +1,499 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pills Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700;9..40,900&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<style>
+  :root{
+    --bg:#f4f3f6; --panel:#fff; --ink:#15131a; --muted:#6c6877; --line:#dcd8e4;
+    --accent:#6b3df0; --accent-ink:#fff; --warn:#d6322e; --ok:#1c8a4f;
+  }
+  *{box-sizing:border-box;border-radius:0!important}
+  html,body{margin:0;height:100%}
+  body{font-family:"DM Sans",system-ui,sans-serif;background:var(--bg);color:var(--ink);font-size:14px}
+  header{display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--panel);border-bottom:1px solid var(--line)}
+  header h1{font-size:16px;font-weight:900;letter-spacing:.04em;text-transform:uppercase;margin:0;flex:1}
+  header small{color:var(--muted)}
+  button,select,input,textarea{font:inherit;color:inherit}
+  button{cursor:pointer}
+  .btn{border:1px solid var(--ink);background:var(--panel);padding:8px 12px;font-weight:600}
+  .btn:hover{background:#eee}
+  .btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+  .btn.primary:hover{background:#5a2fd6}
+  .btn.small{padding:4px 8px;font-size:12px}
+  main{display:grid;grid-template-columns:240px minmax(320px,1fr) 360px;height:calc(100vh - 54px)}
+  aside,section{overflow:auto}
+  #list{background:var(--panel);border-right:1px solid var(--line);padding:12px}
+  #stage{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:16px;background:#555;min-width:0}
+  #ctrl{background:var(--panel);border-left:1px solid var(--line);padding:14px}
+  .newrow{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:12px}
+  .item{display:flex;gap:10px;align-items:center;padding:8px;border:1px solid transparent;cursor:pointer}
+  .item:hover{background:#f1eef8}
+  .item.sel{border-color:var(--accent);background:#f1eef8}
+  .item canvas{display:block;background:#ddd;flex:none}
+  .item .meta{min-width:0;font-size:12px;line-height:1.3}
+  .item .meta b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .item .meta span{color:var(--muted)}
+  .empty{color:var(--muted);padding:12px 4px}
+  #preview{display:block;box-shadow:0 8px 30px rgba(0,0,0,.35);touch-action:none;background:#222}
+  .hint{color:#ddd;font-size:12px;text-align:center;max-width:420px}
+  .stagebar{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+  fieldset{border:0;border-top:1px solid var(--line);margin:0 0 14px;padding:12px 0 0}
+  legend{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:0 6px 0 0}
+  label{display:block;font-size:12px;font-weight:600;margin:10px 0 4px}
+  input[type=text],textarea,select{width:100%;border:1px solid var(--line);background:#fff;padding:8px}
+  textarea{resize:vertical}
+  input[type=range]{width:100%}
+  input[type=color]{width:42px;height:30px;padding:0;border:1px solid var(--line);background:#fff}
+  .row{display:flex;gap:8px;align-items:center}
+  .seg{display:flex}
+  .seg button{flex:1;border:1px solid var(--line);background:#fff;padding:7px 4px;font-size:12px;font-weight:600;margin-left:-1px}
+  .seg button:first-child{margin-left:0}
+  .seg button.on{background:var(--ink);color:#fff;border-color:var(--ink);position:relative}
+  .sw button{height:34px;padding:0;border:2px solid #fff;outline:1px solid var(--line)}
+  .sw button.on{outline:2px solid var(--ink)}
+  .rules{background:#f7f5fb;border:1px solid var(--line);padding:8px 10px;font-size:12px;line-height:1.45;color:#3c3846}
+  .rules ul{margin:4px 0 0;padding-left:16px}
+  .count{font-size:12px;font-weight:700}
+  .count.bad{color:var(--warn)} .count.good{color:var(--ok)}
+  .mascots{display:flex;flex-wrap:wrap;gap:6px}
+  .mascots button{width:44px;height:44px;padding:2px;background:#f1eef8;border:1px solid var(--line)}
+  .mascots button.on{border:2px solid var(--ink)}
+  .mascots img,.mascots canvas{width:100%;height:100%;object-fit:contain;display:block}
+  .drop{border:1px dashed var(--muted);padding:12px;text-align:center;color:var(--muted);font-size:12px;cursor:pointer}
+  .drop:hover{background:#f7f5fb}
+  [hidden]{display:none!important}
+  #toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:8px 14px;font-size:13px;opacity:0;transition:opacity .2s;pointer-events:none}
+  #toast.show{opacity:1}
+  @media (max-width:1000px){
+    main{grid-template-columns:1fr;height:auto}
+    #list{border-right:0;border-bottom:1px solid var(--line)}
+    #ctrl{border-left:0}
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>Pills Studio</h1>
+  <small id="saveState">Saved in this browser</small>
+  <button class="btn" id="btnPNG">Download PNG</button>
+  <button class="btn primary" id="btnZip">Download all (ZIP)</button>
+</header>
+
+<main>
+  <aside id="list">
+    <div class="newrow">
+      <button class="btn small" data-new="image9">+ 9:16</button>
+      <button class="btn small" data-new="image45">+ 4:5</button>
+      <button class="btn small" data-new="prompt">+ Prompt</button>
+    </div>
+    <div id="items"></div>
+  </aside>
+
+  <section id="stage">
+    <canvas id="preview"></canvas>
+    <div class="stagebar">
+      <button class="btn small" id="btnDup">Duplicate</button>
+      <button class="btn small" id="btnDel">Delete</button>
+    </div>
+    <div class="hint" id="stageHint"></div>
+  </section>
+
+  <aside id="ctrl">
+    <fieldset>
+      <legend>Card</legend>
+      <label>Format</label>
+      <div class="seg" data-k="type">
+        <button data-v="image9">Image 9:16</button>
+        <button data-v="image45">Image 4:5</button>
+        <button data-v="prompt">Prompt 1:1</button>
+      </div>
+      <div class="row">
+        <div style="flex:1"><label>Segment</label>
+          <select data-k="segment"><option value="female">Female</option><option value="male">Male</option><option value="neutral">Neutral</option></select></div>
+        <div style="flex:1"><label>Category</label>
+          <input type="text" data-k="category" list="cats" placeholder="Skincare"></div>
+      </div>
+      <datalist id="cats"><option>Grooming</option><option>Skincare</option><option>Haircare</option><option>Makeup</option><option>Fashion</option><option>Accessories</option><option>Fitness</option><option>Travel</option><option>Gifts</option><option>Tech</option><option>Pets</option><option>Home decor</option></datalist>
+    </fieldset>
+
+    <fieldset data-for="image9 image45">
+      <legend>Treatment</legend>
+      <select data-k="treatment" id="treatment"></select>
+      <div class="rules" id="rules" style="margin-top:8px"></div>
+    </fieldset>
+
+    <fieldset data-for="image9 image45">
+      <legend>Image</legend>
+      <div class="drop" id="drop">Click, drop or paste an image</div>
+      <input type="file" id="file" accept="image/*" hidden>
+      <label>Zoom</label><input type="range" data-k="zoom" min="1" max="3" step="0.01">
+      <label>Position X</label><input type="range" data-k="ox" min="-1" max="1" step="0.01">
+      <label>Position Y</label><input type="range" data-k="oy" min="-1" max="1" step="0.01">
+      <label>Bottom gradient</label>
+      <div class="row">
+        <input type="color" data-k="scrimColor" id="scrimColor">
+        <label style="margin:0;font-weight:500"><input type="checkbox" data-k="scrimAuto"> Match image</label>
+      </div>
+      <label>Gradient height</label><input type="range" data-k="scrimH" min="25" max="80" step="1">
+    </fieldset>
+
+    <fieldset data-for="image9 image45">
+      <legend>Copy</legend>
+      <label>Small line above <span style="font-weight:400;color:var(--muted)">(optional)</span></label>
+      <input type="text" data-k="kicker" placeholder="Find">
+      <label>Headline <span style="font-weight:400;color:var(--muted)">(Enter = line break)</span></label>
+      <textarea data-k="headline" rows="2" placeholder="Matcha mask"></textarea>
+      <label>Small line below <span style="font-weight:400;color:var(--muted)">(optional)</span></label>
+      <input type="text" data-k="sub" placeholder="For your skin">
+      <label>Alignment</label>
+      <div class="seg" data-k="align"><button data-v="left">Bottom left</button><button data-v="right">Bottom right</button></div>
+      <div class="count" id="wc" style="margin-top:8px"></div>
+    </fieldset>
+
+    <fieldset data-for="prompt">
+      <legend>Prompt card</legend>
+      <label>Question <span style="font-weight:400;color:var(--muted)">(written how a user would type it)</span></label>
+      <textarea data-k="question" rows="3" placeholder="Two underrated hacks to find your undertone"></textarea>
+      <label>Category subtext <span style="font-weight:400;color:var(--muted)">(optional)</span></label>
+      <input type="text" data-k="subtext" placeholder="Skincare">
+      <label>Colour</label>
+      <div class="seg sw" data-k="palette" id="palette"></div>
+      <label>Mascot</label>
+      <div class="mascots" id="mascots"></div>
+      <div class="count" id="wcp" style="margin-top:8px"></div>
+    </fieldset>
+
+    <fieldset data-for="image9 image45">
+      <legend>Image prompt (for your image model)</legend>
+      <label>Subject</label>
+      <input type="text" data-k="subject" placeholder="Matcha face mask, man pulling a funny face">
+      <label>Generated prompt</label>
+      <textarea id="promptOut" rows="9" readonly></textarea>
+      <button class="btn small" id="btnCopyPrompt" style="margin-top:6px">Copy prompt</button>
+    </fieldset>
+  </aside>
+</main>
+<div id="toast"></div>
+<input type="file" id="mascotFile" accept="image/*" hidden>
+
+<script>
+"use strict";
+/* ---------- Strategy data ---------- */
+const SIZES = { image9:[170,310], image45:[170,212], prompt:[170,170] };
+const TYPE_LABEL = { image9:"9:16", image45:"4:5", prompt:"1:1" };
+const MAX_WORDS = 7;
+const EXPORT_SCALE = 4;
+const PREVIEW_SCALE = 2;
+
+const TREATMENTS = {
+  contrejour: {
+    name:"Contre-jour beauty close-ups",
+    style:"Tight, backlit macro crop of the moment the product is used, with the model partly cropped and one element catching the light.",
+    rules:["One macro crop and one action per image","One gradient colour per category, falling to dark at the edges","A thin rim light with a soft fill so skin and texture stay readable","Consistent 9:16 or 4:5 ratio"]
+  },
+  playful: {
+    name:"Playful conceptual portraits",
+    style:"Full-face model caught mid-action with the product as a prop and one unexpected twist, shot with direct flash on a flat, saturated backdrop.",
+    rules:["One full-face model, one twist per image","One bold backdrop colour per category","Direct flash with a realistic, unretouched feel","Consistent 9:16 or 4:5 ratio"]
+  },
+  hero: {
+    name:"Hero product still life",
+    style:"The product is the hero, shot on location in natural light with no model competing for attention.",
+    rules:["One hero product or small group per image, in a real-world scene","Essentials carry the mock \"bloom\" brand so they read as a product line","Accessories and other products stay completely unbranded","Consistent 9:16 or 4:5 ratio"]
+  }
+};
+const PALETTES = {
+  purple:{ label:"Purple", brand:"#CCABFF", from:"#F3ECFF", to:"#AE8AFF" },
+  pink:  { label:"Pink",   brand:"#FF9B99", from:"#FFEDEA", to:"#FFAEA9" },
+  blue:  { label:"Blue",   brand:"#C1E2FA", from:"#EAF5FF", to:"#B6DAF7" },
+  yellow:{ label:"Yellow", brand:"#FCF0CC", from:"#FFF8E0", to:"#F5E1A4" }
+};
+
+/* ---------- State ---------- */
+const STORE_KEY = "pillsStudio.v1";
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+const uid = () => Math.random().toString(36).slice(2,9);
+let state, sel;
+
+function blank(type){
+  return { id:uid(), type, segment:"neutral", category:"", treatment:"contrejour", subject:"",
+    kicker:"", headline:"", sub:"", align:"left", img:null, zoom:1, ox:0, oy:0,
+    scrimAuto:true, scrimColor:"#20483a", scrimH:55,
+    question:"", subtext:"", palette:"purple", mascot:-1 };
+}
+function seed(){
+  const a = Object.assign(blank("image9"),{segment:"male",category:"Skincare",treatment:"playful",kicker:"Find",headline:"Matcha\nmask",sub:"For your skin",align:"right",subject:"Matcha face mask, man pulling a funny face"});
+  const b = Object.assign(blank("image45"),{segment:"male",category:"Fitness",treatment:"hero",headline:"5 gym\ngo-tos",sub:"For a beginner"});
+  const c = Object.assign(blank("prompt"),{segment:"female",category:"Skincare",question:"Two under-\nrated hacks to find your undertone"});
+  return { cards:[a,b,c], mascots:[] };
+}
+function load(){ try{ const s=JSON.parse(localStorage.getItem(STORE_KEY)); if(s&&s.cards&&s.cards.length) return s; }catch(e){} return null; }
+let saveTimer;
+function save(){
+  clearTimeout(saveTimer);
+  saveTimer=setTimeout(()=>{
+    try{ localStorage.setItem(STORE_KEY,JSON.stringify(state)); $("#saveState").textContent="Saved in this browser"; }
+    catch(e){ $("#saveState").textContent="Browser storage full – download your cards"; }
+  },300);
+}
+const cur = () => state.cards.find(c=>c.id===sel);
+state = load() || seed();
+sel = state.cards[0]?.id;
+
+/* ---------- Image cache ---------- */
+const imgCache = new Map();
+function getImg(src){
+  if(!src) return null;
+  let e = imgCache.get(src);
+  if(!e){ e={img:new Image(),ok:false}; e.img.onload=()=>{e.ok=true;refresh();}; e.img.src=src; imgCache.set(src,e); }
+  return e.ok ? e.img : null;
+}
+function readFile(file,max,type){
+  return new Promise((res,rej)=>{
+    const fr=new FileReader();
+    fr.onload=()=>{ const im=new Image(); im.onload=()=>{
+      const k=Math.min(1,max/Math.max(im.width,im.height));
+      const c=document.createElement("canvas"); c.width=Math.round(im.width*k); c.height=Math.round(im.height*k);
+      c.getContext("2d").drawImage(im,0,0,c.width,c.height);
+      res(type==="png"?c.toDataURL("image/png"):c.toDataURL("image/jpeg",.9));
+    }; im.onerror=rej; im.src=fr.result; };
+    fr.onerror=rej; fr.readAsDataURL(file);
+  });
+}
+
+/* ---------- Rendering ---------- */
+function coverRect(img,c,W,H){
+  const base=Math.max(W/img.width,H/img.height)*c.zoom;
+  const dw=img.width*base, dh=img.height*base;
+  return { dw, dh, dx:(W-dw)/2 + c.ox*(dw-W)/2, dy:(H-dh)/2 + c.oy*(dh-H)/2 };
+}
+function drawCover(ctx,img,c,W,H){ const r=coverRect(img,c,W,H); ctx.drawImage(img,r.dx,r.dy,r.dw,r.dh); }
+function sampleBottom(img,c,W,H){
+  const w=34,h=Math.max(8,Math.round(34*H/W)), cv=document.createElement("canvas");
+  cv.width=w; cv.height=h; const x=cv.getContext("2d"); drawCover(x,img,c,w,h);
+  const y0=Math.floor(h*.6), d=x.getImageData(0,y0,w,h-y0).data; let r=0,g=0,b=0,n=d.length/4;
+  for(let i=0;i<d.length;i+=4){r+=d[i];g+=d[i+1];b+=d[i+2];}
+  return [r/n*.7, g/n*.7, b/n*.7].map(Math.round);
+}
+const hex2rgb = h => [1,3,5].map(i=>parseInt(h.slice(i,i+2),16));
+const rgba = (c,a) => `rgba(${c[0]},${c[1]},${c[2]},${a})`;
+function wrap(ctx,text,maxW){
+  const out=[];
+  for(const para of String(text).split("\n")){
+    const words=para.split(/\s+/).filter(Boolean); let cur="";
+    for(const w of words){ const t=cur?cur+" "+w:w; if(ctx.measureText(t).width>maxW && cur){out.push(cur);cur=w;} else cur=t; }
+    if(cur) out.push(cur);
+  }
+  return out;
+}
+function setFont(ctx,weight,size,ls){
+  ctx.font=`${weight} ${size}px "DM Sans", system-ui, sans-serif`;
+  if("letterSpacing" in ctx) ctx.letterSpacing=(ls||0)+"px";
+}
+function drawImageCard(ctx,c,W,H){
+  const img=getImg(c.img);
+  ctx.fillStyle="#1b1b1f"; ctx.fillRect(0,0,W,H);
+  if(img){ drawCover(ctx,img,c,W,H); }
+  else { ctx.fillStyle="#8d8a97"; setFont(ctx,500,9,0); ctx.textAlign="center"; ctx.fillText("Add an image",W/2,H/2); }
+  // bottom gradient
+  const col = c.scrimAuto && img ? sampleBottom(img,c,W,H) : hex2rgb(c.scrimColor);
+  const dark = col.map(v=>Math.round(v*.45));
+  const top = H*(1-c.scrimH/100);
+  const g=ctx.createLinearGradient(0,top,0,H);
+  g.addColorStop(0,rgba(col,0)); g.addColorStop(.5,rgba(col,.78)); g.addColorStop(1,rgba(dark,.97));
+  ctx.fillStyle=g; ctx.fillRect(0,top,W,H-top);
+  // text
+  const pad=12, right=c.align==="right", x=right?W-pad:pad;
+  ctx.textAlign=right?"right":"left"; ctx.textBaseline="alphabetic"; ctx.fillStyle="#fff";
+  let cursor=H-pad;
+  const stack=(text,weight,size,ls,lh,gap,maxW)=>{
+    if(!text||!text.trim()) return;
+    setFont(ctx,weight,size,ls);
+    const lines=wrap(ctx,text.toUpperCase(),maxW); let base=cursor;
+    for(let i=lines.length-1;i>=0;i--){ ctx.fillText(lines[i],x,base); base-=lh; }
+    cursor=(base+lh)-size*.72-gap;
+  };
+  stack(c.sub,600,6.5,.4,8.5,4.5,W-2*pad);
+  stack(c.headline,900,15,0,14.2,3.5,W*.74);
+  stack(c.kicker,600,6.5,.4,8.5,0,W-2*pad);
+  if("letterSpacing" in ctx) ctx.letterSpacing="0px";
+}
+function drawMascotDefault(ctx,x,y,s){
+  const g=ctx.createRadialGradient(x+s*.4,y+s*.3,s*.05,x+s*.5,y+s*.5,s*.6);
+  g.addColorStop(0,"#A57BFF"); g.addColorStop(1,"#4A1FD1");
+  ctx.fillStyle=g; ctx.beginPath(); ctx.ellipse(x+s*.5,y+s*.55,s*.46,s*.42,0,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle="#fff";
+  for(const ex of [.36,.62]){ ctx.beginPath(); ctx.ellipse(x+s*ex,y+s*.55,s*.055,s*.1,0,0,Math.PI*2); ctx.fill(); }
+}
+function drawPrompt(ctx,c,W,H){
+  const p=PALETTES[c.palette]||PALETTES.purple;
+  const g=ctx.createLinearGradient(0,0,W,H); g.addColorStop(0,p.from); g.addColorStop(1,p.to);
+  ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+  const mh=30, m=c.mascot>=0?getImg(state.mascots[c.mascot]):null;
+  if(m) ctx.drawImage(m,14,14,mh*m.width/m.height,mh); else if(c.mascot<0) drawMascotDefault(ctx,14,14,mh);
+  ctx.fillStyle="#14121a"; ctx.textAlign="left"; ctx.textBaseline="alphabetic";
+  setFont(ctx,400,15,-.1);
+  const lines=wrap(ctx,c.question||"",W-28); let y=70;
+  for(const l of lines){ ctx.fillText(l,14,y); y+=17.5; }
+  if(c.subtext){ setFont(ctx,600,6.5,.4); ctx.fillStyle="rgba(20,18,26,.6)"; ctx.fillText(c.subtext.toUpperCase(),14,H-12); if("letterSpacing" in ctx) ctx.letterSpacing="0px"; }
+}
+function render(c,canvas,scale){
+  const [W,H]=SIZES[c.type];
+  canvas.width=Math.round(W*scale); canvas.height=Math.round(H*scale);
+  const ctx=canvas.getContext("2d"); ctx.setTransform(scale,0,0,scale,0,0);
+  (c.type==="prompt"?drawPrompt:drawImageCard)(ctx,c,W,H);
+}
+
+/* ---------- UI ---------- */
+const preview=$("#preview");
+function wordCount(c){ return [c.kicker,c.headline,c.sub].join(" ").trim().split(/\s+/).filter(Boolean).length; }
+function cardLabel(c){ const t=(c.type==="prompt"?c.question:c.headline||"").replace(/\n/g," ").trim(); return t||"Untitled"; }
+
+function drawPreview(){
+  const c=cur(); if(!c) return;
+  const [W,H]=SIZES[c.type], dpr=window.devicePixelRatio||1;
+  render(c,preview,PREVIEW_SCALE*dpr);
+  preview.style.width=W*PREVIEW_SCALE+"px"; preview.style.height=H*PREVIEW_SCALE+"px";
+  preview.style.cursor = c.type!=="prompt"&&c.img ? "grab":"default";
+  const n=wordCount(c), wc=$("#wc");
+  wc.textContent=`${n} / ${MAX_WORDS} words`+(n>MAX_WORDS?" – too long":""); wc.className="count "+(n>MAX_WORDS?"bad":"good");
+  const q=(c.question||"").trim().split(/\s+/).filter(Boolean).length;
+  $("#wcp").textContent=`${q} words`; $("#wcp").className="count";
+  $("#promptOut").value=buildPrompt(c);
+  $("#stageHint").textContent = c.type==="prompt" ? "Text-led card with the Glance mascot. Tapping it sends the question straight into the chat."
+    : "Drag the image to reposition. Text sits bottom left or bottom right only.";
+}
+const thumbs=new Map();
+function drawThumb(c){ const cv=thumbs.get(c.id); if(cv){ render(c,cv,.6); const lab=cv.parentElement.querySelector("b"); if(lab) lab.textContent=cardLabel(c); } }
+function refresh(){ drawPreview(); const c=cur(); if(c) drawThumb(c); }
+
+function buildList(){
+  const box=$("#items"); box.innerHTML=""; thumbs.clear();
+  if(!state.cards.length){ box.innerHTML='<div class="empty">No cards yet. Add one above.</div>'; return; }
+  for(const c of state.cards){
+    const d=document.createElement("div"); d.className="item"+(c.id===sel?" sel":""); d.dataset.id=c.id;
+    const cv=document.createElement("canvas"); thumbs.set(c.id,cv);
+    const meta=document.createElement("div"); meta.className="meta";
+    meta.innerHTML=`<b></b><span>${TYPE_LABEL[c.type]} · ${c.segment}${c.category?" · "+c.category.replace(/</g,""):""}</span>`;
+    d.append(cv,meta); box.append(d); drawThumb(c);
+    d.onclick=()=>{ sel=c.id; buildList(); syncUI(); refresh(); };
+  }
+}
+function syncUI(){
+  const c=cur(); if(!c) return;
+  $$("#ctrl [data-for]").forEach(el=>el.hidden=!el.dataset.for.split(" ").includes(c.type));
+  $$("#ctrl [data-k]").forEach(el=>{
+    const k=el.dataset.k;
+    if(el.classList.contains("seg")) $$(`[data-k="${k}"] button`).forEach(b=>b.classList.toggle("on",b.dataset.v===String(c[k])));
+    else if(el.type==="checkbox") el.checked=!!c[k];
+    else el.value=c[k]??"";
+  });
+  const t=TREATMENTS[c.treatment]||TREATMENTS.contrejour;
+  $("#rules").innerHTML=`<b>${t.name}</b><br>${t.style}<ul>${t.rules.map(r=>`<li>${r}</li>`).join("")}</ul>`;
+  renderMascots();
+}
+function renderMascots(){
+  const c=cur(); const box=$("#mascots"); box.innerHTML="";
+  const mk=(idx,inner)=>{ const b=document.createElement("button"); b.className=idx===c.mascot?"on":""; b.append(inner); b.onclick=()=>{ c.mascot=idx; renderMascots(); refresh(); save(); }; box.append(b); };
+  const dc=document.createElement("canvas"); dc.width=dc.height=88; drawMascotDefault(dc.getContext("2d"),4,4,80); mk(-1,dc);
+  state.mascots.forEach((src,i)=>{ const im=new Image(); im.src=src; mk(i,im); });
+  const add=document.createElement("button"); add.textContent="+"; add.title="Upload mascot (PNG with transparent background)";
+  add.onclick=()=>$("#mascotFile").click(); box.append(add);
+}
+
+/* ---------- Image prompt builder ---------- */
+function buildPrompt(c){
+  const t=TREATMENTS[c.treatment]||TREATMENTS.contrejour;
+  const seg={female:"female model",male:"male model",neutral:"no gender-specific casting"}[c.segment];
+  return [
+    `${t.name}. ${c.type==="image9"?"9:16":"4:5"} portrait image for a shopping-app starter card.`,
+    `Subject: ${c.subject||"[describe the product and moment]"}${c.category?` (category: ${c.category})`:""}.`,
+    `Casting: ${seg}.`,
+    `Style: ${t.style}`,
+    `Rules: ${t.rules.join("; ")}.`,
+    `Composition: keep the bottom 35% calm and uncluttered so overlay text stays readable. No text, logos, watermarks or UI in the image.`
+  ].join("\n");
+}
+
+/* ---------- Events ---------- */
+document.addEventListener("input",e=>{
+  const el=e.target.closest("#ctrl [data-k]"); if(!el||el.classList.contains("seg")) return;
+  const c=cur(), k=el.dataset.k;
+  c[k]= el.type==="checkbox"?el.checked : el.type==="range"?parseFloat(el.value) : el.value;
+  if(k==="scrimColor") c.scrimAuto=false, $('[data-k="scrimAuto"]').checked=false;
+  if(k==="treatment") syncUI();
+  if(k==="segment"||k==="category") buildList(); else refresh();
+  save();
+});
+document.addEventListener("click",e=>{
+  const b=e.target.closest(".seg button"); if(b){
+    const c=cur(), k=b.parentElement.dataset.k; c[k]=b.dataset.v;
+    if(k==="type") buildList();
+    syncUI(); refresh(); save(); return;
+  }
+  const n=e.target.closest("[data-new]"); if(n){
+    const c=blank(n.dataset.new); if(c.type==="prompt") c.palette="purple";
+    state.cards.unshift(c); sel=c.id; buildList(); syncUI(); refresh(); save();
+  }
+});
+$("#btnDup").onclick=()=>{ const c=cur(); if(!c) return; const d=JSON.parse(JSON.stringify(c)); d.id=uid(); state.cards.splice(state.cards.indexOf(c)+1,0,d); sel=d.id; buildList(); syncUI(); refresh(); save(); };
+$("#btnDel").onclick=()=>{ const c=cur(); if(!c||!confirm("Delete this card?")) return; const i=state.cards.indexOf(c); state.cards.splice(i,1); sel=state.cards[Math.min(i,state.cards.length-1)]?.id; buildList(); if(cur()){syncUI();refresh();} else {const x=preview.getContext("2d");x.clearRect(0,0,preview.width,preview.height);} save(); };
+
+// palette swatches
+$("#palette").innerHTML=Object.entries(PALETTES).map(([k,p])=>`<button data-v="${k}" title="${p.label} ${p.brand}" style="background:linear-gradient(135deg,${p.from},${p.to})"></button>`).join("");
+$("#treatment").innerHTML=Object.entries(TREATMENTS).map(([k,t])=>`<option value="${k}">${t.name}</option>`).join("");
+
+// image upload / drop / paste
+async function setImage(file){
+  const c=cur(); if(!c||c.type==="prompt"||!file||!file.type.startsWith("image/")) return;
+  c.img=await readFile(file,1600,"jpg"); c.zoom=1; c.ox=0; c.oy=0; syncUI(); refresh(); save();
+}
+$("#drop").onclick=()=>$("#file").click();
+$("#file").onchange=e=>{ setImage(e.target.files[0]); e.target.value=""; };
+["dragover","drop"].forEach(t=>document.addEventListener(t,e=>{ e.preventDefault(); if(t==="drop") setImage(e.dataTransfer.files[0]); }));
+document.addEventListener("paste",e=>{ const f=[...(e.clipboardData?.files||[])][0]; if(f) setImage(f); });
+$("#mascotFile").onchange=async e=>{
+  const f=e.target.files[0]; e.target.value=""; if(!f) return;
+  state.mascots.push(await readFile(f,256,"png")); cur().mascot=state.mascots.length-1; renderMascots(); refresh(); save();
+};
+
+// drag to reposition
+let drag=null;
+preview.addEventListener("pointerdown",e=>{ const c=cur(); const img=c&&c.type!=="prompt"&&getImg(c.img); if(!img) return; drag={x:e.clientX,y:e.clientY,ox:c.ox,oy:c.oy}; preview.setPointerCapture(e.pointerId); preview.style.cursor="grabbing"; });
+preview.addEventListener("pointermove",e=>{
+  if(!drag) return; const c=cur(), [W,H]=SIZES[c.type], r=coverRect(getImg(c.img),c,W,H);
+  const dx=(e.clientX-drag.x)/PREVIEW_SCALE, dy=(e.clientY-drag.y)/PREVIEW_SCALE;
+  if(r.dw>W+.5) c.ox=Math.max(-1,Math.min(1,drag.ox+dx/((r.dw-W)/2)));
+  if(r.dh>H+.5) c.oy=Math.max(-1,Math.min(1,drag.oy+dy/((r.dh-H)/2)));
+  $('[data-k="ox"]').value=c.ox; $('[data-k="oy"]').value=c.oy; refresh();
+});
+preview.addEventListener("pointerup",()=>{ if(drag){drag=null;preview.style.cursor="grab";save();} });
+
+/* ---------- Export ---------- */
+const slug=s=>String(s||"").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,40);
+function fileName(c,i){ return [i!=null?String(i+1).padStart(2,"0"):"",c.segment,TYPE_LABEL[c.type].replace(":","x"),slug(c.category),slug(cardLabel(c))].filter(Boolean).join("_")+".png"; }
+function toBlob(c){ const cv=document.createElement("canvas"); render(c,cv,EXPORT_SCALE); return new Promise(r=>cv.toBlob(r,"image/png")); }
+function download(blob,name){ const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=name; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),2000); }
+function toast(m){ const t=$("#toast"); t.textContent=m; t.classList.add("show"); setTimeout(()=>t.classList.remove("show"),2200); }
+function warnLong(list){ const n=list.filter(c=>c.type!=="prompt"&&wordCount(c)>MAX_WORDS).length; if(n) toast(`${n} card${n>1?"s":""} over ${MAX_WORDS} words`); }
+$("#btnPNG").onclick=async()=>{ const c=cur(); if(!c) return; download(await toBlob(c),fileName(c)); warnLong([c]); };
+$("#btnZip").onclick=async()=>{
+  if(!window.JSZip) return toast("ZIP library failed to load – use Download PNG");
+  const z=new JSZip(); for(let i=0;i<state.cards.length;i++) z.file(fileName(state.cards[i],i),await toBlob(state.cards[i]));
+  download(await z.generateAsync({type:"blob"}),"starter-pills.zip"); warnLong(state.cards);
+};
+$("#btnCopyPrompt").onclick=async()=>{ try{ await navigator.clipboard.writeText($("#promptOut").value); toast("Prompt copied"); }catch(e){ $("#promptOut").select(); document.execCommand("copy"); toast("Prompt copied"); } };
+
+/* ---------- Boot ---------- */
+buildList(); syncUI(); refresh();
+Promise.all([400,600,900].map(w=>document.fonts.load(`${w} 16px "DM Sans"`))).then(()=>{ buildList(); refresh(); }).catch(()=>{});
+</script>
+</body>
+</html>
